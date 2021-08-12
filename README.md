@@ -1,14 +1,29 @@
 # MUDLY BUILD TOOL
 
-because sometimes you don't have room to containerise everything
+Because sometimes you don't have room to containerise everything
 
-ToDo:
- - ignore patterns for files included in above
- - implement docker step / investigate custom steps
- - pull pipelines from another config
+## What is Mudly?
 
- ```json
- {
-     "this": "that"
- }
- ```
+A cheap and cheerful knock-off of the much more impressive https://earthly.dev. It's a build tool that will orchestrate build tasks for you, allow you to in-line and share your dockerfiles and take care of spinning up and shutting down your development environment.
+
+Mudly works entirely out of sub-processes, in your own local environment. This has obvious drawbacks in propagating the "it works on my machine" effect, but avoids the cpu / storage / memory consumption of docker-based alternatives.
+
+## Installation
+
+### 1. Mudly Command
+
+```sh
+    go build -o bin/mudly ./cmd/mudly
+    ln -s $(pwd)/bin/mudly /usr/local/bin/mudly
+```
+
+### 2. Visual Studio Code extension
+
+To compile the extension:
+
+```sh
+cd extension
+npm run package
+```
+
+Then right-click the compiled file and select `Install Extension VSIX` to install (at some point we'll do this properly)
