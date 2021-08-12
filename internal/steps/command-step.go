@@ -36,18 +36,18 @@ func (c CommandStep) Run(dir string, artefact string, env map[string]string) run
 	if c.Watch != nil && len(c.Watch) > 0 {
 		t, err := ageCheckerInstance.FetchTimestamp(dir, artefact, c.Name)
 		if err != nil {
-			logrus.Errorf("%s[%s]: failed fetching timestamp: %+v", artefact, c.Name, err)
+			logrus.Errorf("{%s} %s[%s]: failed fetching timestamp: %+v", dir, artefact, c.Name, err)
 			return runner.COMMAND_ERROR
 		}
 
 		hasChanged, err := ageCheckerInstance.HasChangedSince(t, c.Watch)
 		if err != nil {
-			logrus.Errorf("%s[%s]: failed comparing timestamp: %+v", artefact, c.Name, err)
+			logrus.Errorf("{%s} %s[%s]: failed comparing timestamp: %+v", dir, artefact, c.Name, err)
 			return runner.COMMAND_ERROR
 		}
 
 		if !hasChanged {
-			logrus.Debugf("%s[%s (test)]: Skipping step with no changes", artefact, c.Name)
+			logrus.Debugf("{%s} %s[%s (test)]: Skipping step with no changes", dir, artefact, c.Name)
 			return runner.COMMAND_SKIPPED
 		}
 	}
@@ -64,7 +64,7 @@ func (c CommandStep) Run(dir string, artefact string, env map[string]string) run
 		})
 
 		if !test {
-			logrus.Debugf("%s[%s (test)]: Skipping step, condition not met", artefact, c.Name)
+			logrus.Debugf("{%s} %s[%s (test)]: Skipping step, condition not met", dir, artefact, c.Name)
 			return runner.COMMAND_SKIPPED
 		}
 	}
@@ -85,7 +85,7 @@ func (c CommandStep) Run(dir string, artefact string, env map[string]string) run
 				break
 			} else {
 				time.Sleep(time.Millisecond * 500)
-				logrus.Debugf("%s[%s (wait:%d)]: Wait for failed, trying again...", artefact, c.Name, idx)
+				logrus.Debugf("{%s} %s[%s (wait:%d)]: Wait for failed, trying again...", dir, artefact, c.Name, idx)
 			}
 		}
 	}
@@ -100,9 +100,9 @@ func (c CommandStep) Run(dir string, artefact string, env map[string]string) run
 	})
 
 	if success {
-		logrus.Debugf("writing timestamp...")
+		logrus.Debugf("{%s} %s[%s]: writing timestamp...", dir, artefact, c.Name)
 		if err := ageCheckerInstance.SaveTimestamp(dir, artefact, c.Name); err != nil {
-			logrus.Warnf("Failed to write timestamp: %+v", err)
+			logrus.Warnf("{%s} %s[%s]: Failed to write timestamp: %+v", dir, artefact, c.Name, err)
 		}
 		return runner.COMMAND_SUCCESS
 	} else {
