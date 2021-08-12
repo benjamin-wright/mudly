@@ -24,7 +24,7 @@ type shellCommand struct {
 }
 
 func runShellCommand(command *shellCommand) bool {
-	logrus.Debugf("%s[%s]: Running command %s %s", command.artefact, command.step, command.command, strings.Join(command.args, " "))
+	logrus.Debugf("{%s} %s[%s]: Running command %s %s", command.dir, command.artefact, command.step, command.command, strings.Join(command.args, " "))
 
 	cmd := exec.Command(command.command, command.args...)
 	cmd.Dir = path.Clean(command.dir)
@@ -36,20 +36,20 @@ func runShellCommand(command *shellCommand) bool {
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		logrus.Errorf("%s[%s]: Failed to get command stdout pipe: %+v", command.artefact, command.step, err)
+		logrus.Errorf("{%s} %s[%s]: Failed to get command stdout pipe: %+v", command.dir, command.artefact, command.step, err)
 		return false
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		logrus.Errorf("%s[%s]: Failed to get command stderr pipe: %+v", command.artefact, command.step, err)
+		logrus.Errorf("{%s} %s[%s]: Failed to get command stderr pipe: %+v", command.dir, command.artefact, command.step, err)
 		return false
 	}
 
 	if command.stdin != "" {
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
-			logrus.Errorf("%s[%s]: Failed to get command stdin pipe: %+v", command.artefact, command.step, err)
+			logrus.Errorf("{%s} %s[%s]: Failed to get command stdin pipe: %+v", command.dir, command.artefact, command.step, err)
 		}
 
 		go func() {
@@ -60,7 +60,7 @@ func runShellCommand(command *shellCommand) bool {
 
 	err = cmd.Start()
 	if err != nil {
-		logrus.Errorf("%s[%s]: Command couldn't run: %+v", command.artefact, command.step, err)
+		logrus.Errorf("{%s} %s[%s]: Command couldn't run: %+v", command.dir, command.artefact, command.step, err)
 		return false
 	}
 
@@ -68,7 +68,7 @@ func runShellCommand(command *shellCommand) bool {
 		stdoutScanner := bufio.NewScanner(stdout)
 		stdoutScanner.Split(bufio.ScanLines)
 		for stdoutScanner.Scan() {
-			logrus.Infof("%s[%s]: %s", command.artefact, command.step, stdoutScanner.Text())
+			logrus.Infof("{%s} %s[%s]: %s", command.dir, command.artefact, command.step, stdoutScanner.Text())
 		}
 	}()
 
@@ -76,14 +76,14 @@ func runShellCommand(command *shellCommand) bool {
 		stderrScanner := bufio.NewScanner(stderr)
 		stderrScanner.Split(bufio.ScanLines)
 		for stderrScanner.Scan() {
-			logrus.Warnf("%s[%s]: %s", command.artefact, command.step, stderrScanner.Text())
+			logrus.Warnf("{%s} %s[%s]: %s", command.dir, command.artefact, command.step, stderrScanner.Text())
 		}
 	}()
 
 	err = cmd.Wait()
 	if err != nil {
 		if !command.test {
-			logrus.Errorf("%s[%s]: Command failed: %+v", command.artefact, command.step, err)
+			logrus.Errorf("{%s} %s[%s]: Command failed: %+v", command.dir, command.artefact, command.step, err)
 		}
 		return false
 	}

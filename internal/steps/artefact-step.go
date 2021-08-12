@@ -3,7 +3,6 @@ package steps
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"ponglehub.co.uk/tools/mudly/internal/runner"
 )
 
@@ -24,7 +23,6 @@ func (a ArtefactStep) Run(dir string, artefact string, env map[string]string) ru
 		})
 
 		if !test {
-			logrus.Debugf("%s[(test)]: Skipping artefact", artefact)
 			return runner.COMMAND_SKIP_ARTEFACT
 		}
 	}
