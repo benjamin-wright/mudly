@@ -1,0 +1,47 @@
+{
+  "name": "mudly-formatter",
+  "version": "1.0.2",
+  "description": "",
+  "publisher": "pongle-pub",
+  "engines": {
+    "vscode": "^1.43.0"
+  },
+  "repository": "whatever",
+  "scripts": {
+    "package": "vsce package"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "mudfile",
+        "aliases": [
+          "mudfile",
+          "Mudfile"
+        ],
+        "extensions": [
+          ".mudfile",
+          ".Mudfile",
+          "mudfile",
+          "Mudfile"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mudfile",
+        "path": "./grammars/mudfile.tmLanguage.json",
+        "scopeName": "source.mudfile",
+        "embeddedLanguages": {
+          "meta.embedded.block.dockerfile": "dockerfile",
+          "meta.embedded.block.shellscript": "shellscript"
+        }
+      }
+    ]
+  },
+  "author": "",
+  "license": "ISC"
+}

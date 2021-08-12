@@ -1,0 +1,22 @@
+ARTEFACT mudly
+  STEP test
+    COMMAND go test ./...
+  STEP build
+    COMMAND go build -o=bin/mudly -v ./cmd/mudly
+  STEP link
+    CONDITION [[ ! -f /usr/local/bin/mudly ]]
+    COMMAND
+      rm -rf /usr/local/bin/mudly
+      ln -s $(pwd)/bin/mudly /usr/local/bin/mudly
+
+ARTEFACT image
+  STEP image
+    DOCKERFILE go-image
+
+ARTEFACT watch
+  STEP try
+    COMMAND cat go.mod
+
+ARTEFACT long
+  STEP timeout
+    COMMAND sleep 10

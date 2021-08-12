@@ -1,0 +1,45 @@
+ENV VAR_0=value0
+
+ARTEFACT mudly
+  DEPENDS ON ../another-config+image1
+  DEPENDS ON ../another-config+image2
+  ENV VAR_1=value1
+  ENV VAR_2=value2
+
+  STEP test
+    ENV VAR_3=value3
+    WATCH ./path1 ./path2
+    COMMAND go test ./...
+    TAG localhost:5000/image-name
+  STEP build
+    COMMAND go build -o=bin/mudly -v ./cmd/mudly
+  STEP link
+    CONDITION [[ ! -f /usr/local/bin/mudly ]]
+    COMMAND
+      rm -rf /usr/local/bin/mudly
+      ln -s $(pwd)/bin/mudly /usr/local/bin/mudly
+
+DOCKERFILE go-image
+  FILE
+    FROM go:1.3.2
+    RUN go dep download
+  IGNORE
+    node_modules
+    .git
+
+ARTEFACT image
+  DEPENDS ON +mudly
+  CONDITION [[ ! "$SOMETHING" == "true" ]]
+  STEP image
+    DOCKERFILE go-image
+
+ARTEFACT watch
+  PIPELINE test-pipeline
+
+ARTEFACT remote-watch
+  PIPELINE remote-pipeline ./somewhere-else
+
+PIPELINE test-pipeline
+  ENV VAR_4=value4
+  STEP build
+    COMMAND go build $(pwd) -o=bin/mudly -v ./cmd/mudly
