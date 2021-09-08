@@ -1,0 +1,17 @@
+name: build-mudly
+on:
+  release:
+    types:
+    - created
+
+jobs:
+  build-darwin:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+    - name: Build Darwin AMD
+      run: GOOS=darwin GOARCH=amd64 go build -o mudly-darwin-amd64 -v ./cmd/mudly
