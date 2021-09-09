@@ -13,8 +13,6 @@ jobs:
           name: linux
         - os: macos-latest
           name: darwin
-        - os: windows-latest
-          name: windows
         arch:
         - GOARCH: "386"
           label: x86
