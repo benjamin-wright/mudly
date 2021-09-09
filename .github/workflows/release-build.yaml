@@ -20,6 +20,13 @@ jobs:
           label: x86
         - GOARCH: amd64
           label: amd64
+        exclude:
+        - platform:
+            os: macos-latest
+            name: darwin
+          arch:
+            GOARCH: "386"
+            label: x86
     name: Build & Publish
     runs-on: ${{ matrix.platform.os }}
     steps:
