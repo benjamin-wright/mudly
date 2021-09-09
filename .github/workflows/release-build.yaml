@@ -1,8 +1,8 @@
 name: build-mudly
 on:
-  push:
-    branches:
-    - master
+  release:
+    types:
+    - created
 
 jobs:
   build:
@@ -20,24 +20,12 @@ jobs:
         go get ./cmd/mudly
     - name: Run build
       run: go build -o=bin/mudly -v ./cmd/mudly
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Automatic release
-        draft: false
-        prerelease: false
     - name: Upload Artifact
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: mudly
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: bin/mudly
         asset_name: mudly
         asset_content_type: application/octet-stream
