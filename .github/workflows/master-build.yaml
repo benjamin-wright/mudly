@@ -5,13 +5,23 @@ on:
     - created
 
 jobs:
-  build-darwin:
+  build:
+    name: Build Go [${{ matrix.platform }}]
     runs-on: ubuntu-latest
+    env: 
+      ARTIFACT_NAME: mudly-1.16-${{ matrix.platform }}-x64
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux, darwin, win32]
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Go
-      uses: actions/setup-go@v2
+
+    - name: Build Go 1.16
+      run: |
+        ./builders/build-go.ps1 -Platform ${{ matrix.platform }}
+    - name: Publish artifact
+      uses: actions/upload-artifact@v2
       with:
-        go-version: 1.16
-    - name: Build Darwin AMD
-      run: GOOS=darwin GOARCH=amd64 go build -o mudly-darwin-amd64 -v ./cmd/mudly
+        name: ${{ env.ARTIFACT_NAME }}
+        path: ${{ runner.temp }}/artifact
