@@ -1,7 +1,6 @@
 name: test-mudly
 on:
 - pull_request
-- push
 jobs:
   run-tests:
     runs-on: ubuntu-latest
