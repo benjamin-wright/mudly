@@ -15,7 +15,7 @@ jobs:
         go version
         go get -u golang.org/x/lint/golint
     - name: Run build
-      run: go build ./cmd/mudly -o mudly
+      run: go build -o=bin/mudly -v ./cmd/mudly
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
