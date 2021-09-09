@@ -15,7 +15,11 @@ jobs:
           name: darwin
         - os: windows-latest
           name: windows
-        arch: [ x86, amd64 ]
+        arch:
+        - GOARCH: "386"
+          label: x86
+        - GOARCH: amd64
+          label: amd64
     name: Build & Publish
     runs-on: ${{ matrix.platform.os }}
     steps:
@@ -29,13 +33,13 @@ jobs:
         go version
         go get ./cmd/mudly
     - name: Run build
-      run: GOARCH=${{ matrix.arch }} go build -o=bin/mudly-${{ matrix.platform.name }}-${{ matrix.arch }} -v ./cmd/mudly
+      run: GOARCH=${{ matrix.arch.GOARCH }} go build -o=bin/mudly-${{ matrix.platform.name }}-${{ matrix.arch.label }} -v ./cmd/mudly
     - name: Upload Artifact
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: bin/mudly-${{ matrix.platform.name }}-${{ matrix.arch }}
-        asset_name: mudly-${{ matrix.platform.name }}-${{ matrix.arch }}
+        asset_path: bin/mudly-${{ matrix.platform.name }}-${{ matrix.arch.label }}
+        asset_name: mudly-${{ matrix.platform.name }}-${{ matrix.arch.label }}
         asset_content_type: application/octet-stream
