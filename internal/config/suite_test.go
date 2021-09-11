@@ -371,6 +371,66 @@ func TestLoadConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "compose devenv",
+			Files: []ConfigFile{
+				{
+					Path: "./subdir/Mudfile",
+					Content: dedent(`
+						DEVENV db-env
+						  COMPOSE
+						    version: "v3"
+							services:
+							  db:
+							    image: db/image
+
+						ARTEFACT artefact-env
+						  DEVENV db-env
+						  STEP run
+						    COMMAND echo "hi"
+
+						ARTEFACT step-env
+						  STEP run-2
+						    DEVENV db-env
+						    COMMAND echo "yo"
+                    `),
+				},
+			},
+			Targets: []target.Target{{Dir: "subdir"}},
+			Expected: []config.Config{
+				{
+					Path: "subdir",
+					DevEnv: []config.DevEnv{
+						{
+							Name:    "db-env",
+							Compose: "version: \"v3\"\nservices:\n  db:\n    image: db/image",
+						},
+					},
+					Artefacts: []config.Artefact{
+						{
+							Name: "artefact-env",
+							Steps: []config.Step{
+								{
+									Name:    "run",
+									Command: "echo \"hi\"",
+								},
+							},
+							DevEnv: "db-env",
+						},
+						{
+							Name: "step-env",
+							Steps: []config.Step{
+								{
+									Name:    "run-2",
+									Command: "echo \"yo\"",
+									DevEnv:  "db-env",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	} {
 		t.Run(test.Name, func(u *testing.T) {
 			config.SetFS(

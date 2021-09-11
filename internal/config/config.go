@@ -8,8 +8,14 @@ type Dockerfile struct {
 	Ignore string
 }
 
+type DevEnv struct {
+	Name    string
+	Compose string
+}
+
 type Config struct {
 	Path       string
+	DevEnv     []DevEnv
 	Dockerfile []Dockerfile
 	Artefacts  []Artefact
 	Pipelines  []Pipeline
@@ -29,6 +35,7 @@ type Artefact struct {
 	Steps     []Step
 	Pipeline  string
 	Condition string
+	DevEnv    string
 }
 
 type Step struct {
@@ -42,4 +49,5 @@ type Step struct {
 	Context    string
 	Tag        string
 	WaitFor    []string
+	DevEnv     string
 }

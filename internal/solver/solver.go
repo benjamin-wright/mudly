@@ -270,7 +270,63 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 			continue
 		}
 
+		if artefact.DevEnv != "" {
+			var d *config.DevEnv
+			for index, devenv := range pipelineConfig.DevEnv {
+				if devenv.Name == artefact.DevEnv {
+					d = &pipelineConfig.DevEnv[index]
+					break
+				}
+			}
+
+			if d == nil {
+				return &nodes, fmt.Errorf("failed to get devenv for reference: %s", artefact.DevEnv)
+			}
+
+			newNode := runner.Node{
+				SharedEnv: utils.MergeMaps(cfg.Env, artefact.Env, pipeline.Env),
+				Path:      cfg.Path,
+				Artefact:  artefact.Name,
+				Step: steps.DevenvStep{
+					Name:    d.Name,
+					Compose: d.Compose,
+				},
+				State:     runner.STATE_PENDING,
+				DependsOn: []*runner.Node{},
+			}
+
+			nodes.AddNode(cfg.Path, artefact.Name, &newNode)
+		}
+
 		for _, step := range pipeline.Steps {
+			if step.DevEnv != "" {
+				var d *config.DevEnv
+				for index, devenv := range pipelineConfig.DevEnv {
+					if devenv.Name == step.DevEnv {
+						d = &pipelineConfig.DevEnv[index]
+						break
+					}
+				}
+
+				if d == nil {
+					return &nodes, fmt.Errorf("failed to get devenv for reference: %s", step.DevEnv)
+				}
+
+				newNode := runner.Node{
+					SharedEnv: utils.MergeMaps(cfg.Env, artefact.Env, pipeline.Env),
+					Path:      cfg.Path,
+					Artefact:  artefact.Name,
+					Step: steps.DevenvStep{
+						Name:    d.Name,
+						Compose: d.Compose,
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []*runner.Node{},
+				}
+
+				nodes.AddNode(cfg.Path, artefact.Name, &newNode)
+			}
+
 			if step.Dockerfile != "" {
 				content := ""
 				ignore := ""
