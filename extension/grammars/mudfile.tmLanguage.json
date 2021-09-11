@@ -4,6 +4,7 @@
 	"patterns": [
 		{ "include": "#comment" },
 		{ "include": "#docker-include" },
+		{ "include": "#devenv" },
 		{ "include": "#artefact" },
 		{ "include": "#pipeline" },
 		{ "include": "#env" }
@@ -57,7 +58,8 @@
 				{ "include": "#depends-on" },
 				{ "include": "#env" },
 				{ "include": "#pipeline-ref" },
-				{ "include": "#artefact-condition" }
+				{ "include": "#artefact-condition" },
+				{ "include": "#devenv-artefact-link" }
 			]
 		},
 		"env": {
@@ -119,7 +121,8 @@
 				{ "include": "#env" },
 				{ "include": "#watch" },
 				{ "include": "#tag" },
-				{ "include": "#wait-for" }
+				{ "include": "#wait-for" },
+				{ "include": "#devenv-step-link" }
 			]
 		},
 		"watch": {
@@ -272,6 +275,43 @@
 			},
 			"end": "(?x)(?= ^\\s{0,2}\\S)",
 			"contentName": "custom.mudly.ignore"
+		},
+		"devenv": {
+			"begin": "^(DEVENV) (\\S*)$",
+			"beginCaptures": {
+				"1": { "name": "keyword.control" },
+				"2": { "name": "variable.parameter" }
+			},
+			"end": "(?x)(?= ^\\S)",
+			"name": "custom.mudfile.devenv",
+			"patterns": [
+				{ "include": "#devenv-compose" }
+			]
+		},
+		"devenv-compose": {
+			"begin": "^\\s{2}(COMPOSE)$",
+			"beginCaptures": {
+				"1": { "name": "keyword.control" }
+			},
+			"end": "(?x)(?= ^\\s{0,2}\\S)",
+			"contentName": "meta.embedded.block.yaml",
+			"patterns": [
+				{ "include": "source.yaml" }
+			]
+		},
+		"devenv-artefact-link": {
+			"match": "^\\s{2}(DEVENV)\\s(.+)$",
+			"captures": {
+				"1": { "name": "keyword.control" },
+				"2": { "name": "entity.name.type.class" }
+			}
+		},
+		"devenv-step-link": {
+			"match": "^\\s{4}(DEVENV)\\s(.+)$",
+			"captures": {
+				"1": { "name": "keyword.control" },
+				"2": { "name": "entity.name.type.class" }
+			}
 		}
 	}
 }

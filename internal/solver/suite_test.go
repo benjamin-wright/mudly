@@ -629,6 +629,69 @@ func TestSolver(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name:    "devenv",
+			Targets: []target.Target{{Dir: ".", Artefact: "image"}},
+			Configs: []config.Config{
+				{
+					Path: ".",
+					DevEnv: []config.DevEnv{
+						{
+							Name:    "myenv",
+							Compose: "composefile",
+						},
+					},
+					Artefacts: []config.Artefact{
+						{
+							Name:   "image",
+							DevEnv: "myenv",
+							Steps: []config.Step{
+								{
+									Name:    "build",
+									Command: "go build -o ./bin/mudly ./cmd/mudly",
+								},
+								{
+									Name:    "docker",
+									Command: "thing 2",
+								},
+							},
+						},
+					},
+				},
+			},
+			Expected: []testNode{
+				{
+					Path:     ".",
+					Artefact: "image",
+					Step: steps.DevenvStep{
+						Name:    "myenv",
+						Compose: "composefile",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{},
+				},
+				{
+					Path:     ".",
+					Artefact: "image",
+					Step: steps.CommandStep{
+						Name:    "build",
+						Command: "go build -o ./bin/mudly ./cmd/mudly",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{0},
+				},
+				{
+					Path:     ".",
+					Artefact: "image",
+					Step: steps.CommandStep{
+						Name:    "docker",
+						Command: "thing 2",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{1},
+				},
+			},
+		},
 	} {
 		t.Run(test.Name, func(u *testing.T) {
 			nodes, err := solver.Solve(&solver.SolveInputs{

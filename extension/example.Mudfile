@@ -1,5 +1,14 @@
 ENV VAR_0=value0
 
+DEVENV db-env
+  COMPOSE
+    version: "v3"
+    services:
+      db:
+        image: db/image
+        ports:
+        - 1234:1234
+
 ARTEFACT mudly
   DEPENDS ON ../another-config+image1
   DEPENDS ON ../another-config+image2
@@ -38,8 +47,10 @@ ARTEFACT watch
 
 ARTEFACT remote-watch
   PIPELINE remote-pipeline ./somewhere-else
+  DEVENV db-env
 
 PIPELINE test-pipeline
   ENV VAR_4=value4
   STEP build
+    DEVENV db-env
     COMMAND go build $(pwd) -o=bin/mudly -v ./cmd/mudly

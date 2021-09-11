@@ -138,6 +138,17 @@ func getConfigData(filepath string) (Config, error) {
 			}
 
 			cfg.Dockerfile = append(cfg.Dockerfile, dockerfile)
+		case DEVENV_LINE:
+			devenv, err := getDevEnvData(r)
+			if err != nil {
+				return cfg, err
+			}
+
+			if cfg.DevEnv == nil {
+				cfg.DevEnv = []DevEnv{}
+			}
+
+			cfg.DevEnv = append(cfg.DevEnv, devenv)
 		default:
 			return cfg, fmt.Errorf("unknown line type: %s", r.line())
 		}
@@ -190,6 +201,45 @@ func getDockerData(r *reader) (Dockerfile, error) {
 	}
 
 	return dockerfile, nil
+}
+
+func getDevEnvData(r *reader) (DevEnv, error) {
+	devenv := DevEnv{}
+	firstLine := r.line()
+
+	trimmed := strings.TrimSpace(firstLine)
+	parts := strings.Split(trimmed, " ")
+
+	if len(parts) != 2 {
+		return devenv, fmt.Errorf("failed to parse devenv line \"%s\", wrong number of arguments", firstLine)
+	}
+
+	devenv.Name = parts[1]
+
+	targetIndent := r.indent()
+
+	for r.nextLine() {
+		indent := r.indent()
+
+		if indent <= targetIndent {
+			r.previousLine()
+			break
+		}
+
+		switch r.getLineType() {
+		case COMPOSE_LINE:
+			f, err := getStringOrMultiline(r, true)
+			if err != nil {
+				return devenv, fmt.Errorf("failed to parse devenv: %+v", err)
+			}
+
+			devenv.Compose = f
+		default:
+			return devenv, fmt.Errorf("unknown line type: %s", r.line())
+		}
+	}
+
+	return devenv, nil
 }
 
 func getArtefact(r *reader) (Artefact, error) {
@@ -252,6 +302,13 @@ func getArtefact(r *reader) (Artefact, error) {
 			}
 
 			artefact.Condition = condition
+		case DEVENV_LINE:
+			devenv, err := getStringArg(r, nil)
+			if err != nil {
+				return artefact, err
+			}
+
+			artefact.DevEnv = devenv
 		case STEP_LINE:
 			step, err := getStep(r)
 			if err != nil {
@@ -441,6 +498,13 @@ func getStep(r *reader) (Step, error) {
 			}
 
 			step.Dockerfile = dockerfile
+		case DEVENV_LINE:
+			devenv, err := getStringArg(r, nil)
+			if err != nil {
+				return step, err
+			}
+
+			step.DevEnv = devenv
 		case CONTEXT_LINE:
 			context, err := getStringArg(r, nil)
 			if err != nil {

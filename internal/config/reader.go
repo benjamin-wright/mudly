@@ -52,6 +52,8 @@ const (
 	ARTEFACT_LINE lineType = iota
 	PIPELINE_LINE
 	ENV_LINE
+	DEVENV_LINE
+	COMPOSE_LINE
 	DEPENDS_LINE
 	STEP_LINE
 	WATCH_LINE
@@ -128,6 +130,14 @@ func (r *reader) getLineType() lineType {
 
 	if strings.HasPrefix(trimmed, "PIPELINE") {
 		return PIPELINE_LINE
+	}
+
+	if strings.HasPrefix(trimmed, "DEVENV") {
+		return DEVENV_LINE
+	}
+
+	if strings.HasPrefix(trimmed, "COMPOSE") {
+		return COMPOSE_LINE
 	}
 
 	return UNKNOWN_LINE
