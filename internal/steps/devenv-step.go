@@ -12,14 +12,14 @@ type DevenvStep struct {
 }
 
 func (d DevenvStep) isRunning(dir string, artefact string) bool {
-	return !runShellCommand(&shellCommand{
+	return runShellCommand(&shellCommand{
 		dir:      dir,
 		artefact: artefact,
 		step:     fmt.Sprintf("%s (check)", d.Name),
-		command:  "bash",
+		command:  "/bin/bash",
 		args: []string{
 			"-c",
-			fmt.Sprintf("docker compose ls | grep \"%s\"", d.Name),
+			fmt.Sprintf("docker compose ls | grep \"mudly__%s\"", d.Name),
 		},
 		stdin: d.Compose,
 	})
@@ -38,11 +38,12 @@ func (d DevenvStep) Run(dir string, artefact string, env map[string]string) runn
 		args: []string{
 			"compose",
 			"--project-name",
-			d.Name,
+			fmt.Sprintf("mudly__%s", d.Name),
 			"-f",
 			"-",
 			"up",
 			"-d",
+			"--quiet-pull",
 		},
 		stdin: d.Compose,
 	})
