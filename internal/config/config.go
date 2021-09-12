@@ -43,11 +43,11 @@ type Step struct {
 	Env        map[string]string
 	Condition  string
 	Command    string
+	Context    string
+	DevEnv     string
 	Watch      []string
 	Dockerfile string
 	Ignore     string
-	Context    string
 	Tag        string
 	WaitFor    []string
-	DevEnv     string
 }

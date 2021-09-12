@@ -40,7 +40,7 @@ ARTEFACT image
   DEPENDS ON +mudly
   CONDITION [[ ! "$SOMETHING" == "true" ]]
   STEP image
-    DOCKERFILE go-image
+    DOCKERFILE path go-image
 
 ARTEFACT watch
   PIPELINE test-pipeline
