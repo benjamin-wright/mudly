@@ -211,15 +211,66 @@ DOCKERFILE filename
 ARTEFACT <name>
   STEP <name>
     DOCKERFILE filename
+    TAG image/tag
 ```
+
+supported children:
+- [FILE](#FILE)
+- [IGNORE](#IGNORE)
 
 ---
 
 ### ENV
 
+Defines a new environment variable. This can be used at the top level, in an [ARTEFACT](#ARTEFACT), in a [STEP](#STEP) or in a [PIPELINE](#PIPELINE)
+
+```
+ENV VAR_NAME=value
+```
+
+or
+
+```
+ARTEFACT <name>
+  ENV VAR_NAME=value
+```
+
+or
+
+```
+ARTEFACT <name>
+  STEP <name>
+    ENV VAR_NAME=value
+```
+
+or
+
+```
+PIPELINE <name>
+  ENV VAR_NAME=value
+```
+
+`ENV` values at lower levels in the heirarchy will override those from a higher level, based on the following ordering:
+
+- step
+- pipeline
+- artefact
+- global
+
+So an `ENV` term in a `step` will override an `ENV` term for the same variable name in a `pipeline`, `artefact` or `global`
+
 ---
 
 ### FILE
+
+Defines the body of a Dockerfile, as the child of a `DOCKERFILE` term. The dockerfile content should be indented below the `FILE` line, but it otherwise in the usual Dockerfile syntax.
+
+```
+DOCKERFILE my-image
+  FILE
+    FROM alpine
+    RUN apk add whatevs
+```
 
 ---
 
