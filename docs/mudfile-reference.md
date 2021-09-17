@@ -276,9 +276,43 @@ DOCKERFILE my-image
 
 ### IGNORE
 
+Defines the content of `.dockerignore` to go with a `Dockerfile` definition, as the child of a `DOCKERFILE` term. The ignore content should be indented below the `IGNORE` line, but it's otherwise in the usual .dockerignore syntax.
+
+```
+DOCKERFILE my-image
+  IGNORE
+    node_modules
+    *.tgz
+```
+
 ---
 
 ### PIPELINE
+
+Defines a re-usable pipeline, i.e. a collection of [STEP](#STEP) and [ENV](#ENV) terms.
+
+A simple example:
+
+```
+PIPELINE my-pipeline
+  ENV VAR_NAME=value
+  STEP <name>
+    <content>
+
+ARTEFACT <name>
+  PIPELINE my-pipeline
+```
+
+Optionally, add a relative path to reference a pipeline from another file:
+
+```
+ARTEFACT <name>
+  PIPELINE ../sibling-dir my-pipeline
+```
+
+supported children:
+- [STEP](#STEP)
+- [ENV](#ENV)
 
 ---
 
@@ -346,10 +380,50 @@ supported children:
 
 ### TAG
 
+Defines the tag that should be applied to an image build in a docker [STEP](#STEP), e.g.
+
+```
+ARTEFACT <name>
+  STEP <name>
+    DOCKERFILE go-image
+    TAG my-image
+```
+
 ---
 
 ### WAIT FOR
 
+Defines an additional command for a command-type [STEP](#STEP). The step will defer running the main step command until the wait-for command returns a non-zero code, polling every 0.5 seconds. If the wait-for command never returns a non-zero code then it will run forever, or until you give up and hit `Ctrl-C`.
+
+```
+ARTEFACT <name>
+  STEP <name>
+    WAIT FOR curl $MY_API/status
+    COMMAND do something using my api
+```
+
+Like [COMMAND](#COMMAND), `WAIT FOR` accepts multi-line arguments:
+
+```
+ARTEFACT <name>
+  STEP <name>
+    WAIT FOR
+      result=$(curl $MY_API/status | jq '.some-field' -r)
+      validator $result
+    COMMAND do something using my api
+```
+
 ---
 
 ### WATCH
+
+Defines a set of filepaths that mudly should monitor for changes. If the timestamps on the monitored files have not changed since the last successful build, mudly will skip the step. This is useful for build tools / generators that don't natively support caching.
+
+Accepts multiple files as space-seperated strings:
+
+```
+ARTEFACT <name>
+  STEP <name>
+    WATCH ./generator-inputs ./generator-data
+    COMMAND npm run generate
+```
