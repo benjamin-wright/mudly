@@ -11,7 +11,8 @@ Mudly works entirely out of sub-processes, in your own local environment. This h
 ## Docs
 
 Reference:
-- [Command](./docs/command.md)
+- [Command](./docs/command-reference.md)
+- [Mudfile](./docs/mudfile-reference.md)
 
 ## Installation
 

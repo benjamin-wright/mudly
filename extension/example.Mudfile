@@ -21,6 +21,7 @@ ARTEFACT mudly
     COMMAND go test ./...
     TAG localhost:5000/image-name
   STEP build
+    WAIT FOR curl $MY_API/status
     COMMAND go build -o=bin/mudly -v ./cmd/mudly
   STEP link
     CONDITION [[ ! -f /usr/local/bin/mudly ]]
@@ -41,6 +42,7 @@ ARTEFACT image
   CONDITION [[ ! "$SOMETHING" == "true" ]]
   STEP image
     DOCKERFILE go-image
+    TAG my-image
 
 ARTEFACT watch
   PIPELINE test-pipeline
