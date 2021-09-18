@@ -284,7 +284,7 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 			}
 
 			newNode := runner.Node{
-				SharedEnv: utils.MergeMaps(cfg.Env, artefact.Env, pipeline.Env),
+				SharedEnv: utils.MergeMaps(cfg.Env, pipeline.Env, artefact.Env),
 				Path:      cfg.Path,
 				Artefact:  artefact.Name,
 				Step: steps.DevenvStep{
@@ -313,7 +313,7 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 				}
 
 				newNode := runner.Node{
-					SharedEnv: utils.MergeMaps(cfg.Env, artefact.Env, pipeline.Env),
+					SharedEnv: utils.MergeMaps(cfg.Env, pipeline.Env, artefact.Env),
 					Path:      cfg.Path,
 					Artefact:  artefact.Name,
 					Step: steps.DevenvStep{
@@ -351,7 +351,7 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 			}
 
 			newNode := runner.Node{
-				SharedEnv: utils.MergeMaps(cfg.Env, artefact.Env, pipeline.Env),
+				SharedEnv: utils.MergeMaps(cfg.Env, pipeline.Env, artefact.Env),
 				Path:      cfg.Path,
 				Artefact:  artefact.Name,
 				Step:      runnable,

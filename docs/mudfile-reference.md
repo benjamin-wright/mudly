@@ -253,8 +253,8 @@ PIPELINE <name>
 `ENV` values at lower levels in the heirarchy will override those from a higher level, based on the following ordering:
 
 - step
-- pipeline
 - artefact
+- pipeline
 - global
 
 So an `ENV` term in a `step` will override an `ENV` term for the same variable name in a `pipeline`, `artefact` or `global`
