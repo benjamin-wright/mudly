@@ -692,6 +692,53 @@ func TestSolver(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name:    "env priority",
+			Targets: []target.Target{{Dir: ".", Artefact: "image"}},
+			NoDeps:  true,
+			Configs: []config.Config{
+				{
+					Path: ".",
+					Pipelines: []config.Pipeline{
+						{
+							Name: "my-pipeline",
+							Env: map[string]string{
+								"SAME_VAR": "pipeline-val",
+							},
+							Steps: []config.Step{
+								{
+									Name:    "build",
+									Command: "go build -o ./bin/mudly ./cmd/mudly",
+								},
+							},
+						},
+					},
+					Artefacts: []config.Artefact{
+						{
+							Name: "image",
+							Env: map[string]string{
+								"SAME_VAR": "artefact-val",
+							},
+							Pipeline: "my-pipeline",
+						},
+					},
+				},
+			},
+			Expected: []testNode{
+				{
+					Path:     ".",
+					Artefact: "image",
+					SharedEnv: map[string]string{
+						"SAME_VAR": "artefact-val",
+					},
+					Step: steps.CommandStep{
+						Name:    "build",
+						Command: "go build -o ./bin/mudly ./cmd/mudly",
+					},
+					State: runner.STATE_PENDING,
+				},
+			},
+		},
 	} {
 		t.Run(test.Name, func(u *testing.T) {
 			nodes, err := solver.Solve(&solver.SolveInputs{
