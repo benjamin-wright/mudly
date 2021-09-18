@@ -18,4 +18,5 @@ Reference:
 - [Installation](./docs/installation.md)
 - [Command](./docs/command-reference.md)
 - [Mudfile](./docs/mudfile-reference.md)
+- [VSCode Extension](./extension/README.md)
 - [Development](./docs/dev-notes.md)
