@@ -8,11 +8,14 @@ A cheap and cheerful knock-off of the much more impressive https://earthly.dev. 
 
 Mudly works entirely out of sub-processes, in your own local environment. This has obvious drawbacks in propagating the "it works on my machine" effect, but avoids the cpu / storage / memory consumption of container-based alternatives.
 
+## What does it look like?
+
+<img src="./docs/example.png" alt="example mudly file">
+
 ## Docs
 
 Reference:
+- [Installation](./docs/installation.md)
 - [Command](./docs/command-reference.md)
 - [Mudfile](./docs/mudfile-reference.md)
-
-Development:
-- [Dev notes](./docs/dev-notes.md)
+- [Development](./docs/dev-notes.md)
