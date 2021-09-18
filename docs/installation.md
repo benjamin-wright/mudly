@@ -15,3 +15,9 @@ chmod +x /usr/local/bin/mudly
 ## Windows
 
 Watch this space...
+
+# VSCode Extension Installation
+
+Head back to the repo, find your mudly release version and download the mudly-formatter.vsix file.
+
+In VS Code, Open `extensions` and select the `...` option from the top-right of the explorer tab. Click `Install from VSIX...` and select the downloaded `mudly-formatter.vsix` file. Profit.
