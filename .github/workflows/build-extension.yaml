@@ -17,16 +17,16 @@ jobs:
     - name: Install dependencies
       run: |
         npm ---version
-        npm ci
+        cd extension && npm ci
     - name: Run build
       run: |-
-        npm run package -- -o mudly-formatter.vsix
+        cd extension && npm run package -- -o mudly-formatter.vsix
     - name: Upload Artifact
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: mudly-formatter.vsix
+        asset_path: extension/mudly-formatter.vsix
         asset_name: mudly-formatter.vsix
         asset_content_type: application/octet-stream
