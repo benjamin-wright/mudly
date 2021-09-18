@@ -58,14 +58,7 @@ func getCommand(args []string) (CommandType, []string) {
 	}
 }
 
-func main() {
-	setLogLevel()
-
-	args := os.Args[1:]
-	logrus.Debugf("Running mudly with args: %+v", args)
-
-	command, args := getCommand(args)
-
+func buildTargets(command CommandType, args []string) {
 	targets := []target.Target{}
 	for _, path := range args {
 		target, err := target.ParseTarget(path)
@@ -117,4 +110,15 @@ func main() {
 	for _, node := range nodes {
 		logrus.Debugf("%s:%s[%s] - %d", node.Path, node.Artefact, node.Step, node.State)
 	}
+}
+
+func main() {
+	setLogLevel()
+
+	args := os.Args[1:]
+	logrus.Debugf("Running mudly with args: %+v", args)
+
+	command, args := getCommand(args)
+
+	buildTargets(command, args)
 }
