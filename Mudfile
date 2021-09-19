@@ -1,5 +1,28 @@
+DEVENV db-test
+  COMPOSE
+    version: "3"
+    services:
+      db:
+        image: nginx:alpine
+
+DEVENV other-test
+  COMPOSE
+    version: "3"
+    services:
+      db:
+        image: nginx:alpine
+
+ARTEFACT dev
+  STEP env1
+    DEVENV db-test
+    COMMAND echo "env1"
+  STEP env2
+    DEVENV other-test
+    COMMAND echo "env2"
+
 ARTEFACT test
   STEP test
+    DEVENV db-test
     COMMAND go test ./...
 
 ARTEFACT mudly

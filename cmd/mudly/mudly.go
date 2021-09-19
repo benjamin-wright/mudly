@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"os"
-	"strings"
 
 	"github.com/sirupsen/logrus"
+	"ponglehub.co.uk/tools/mudly/internal/args_parser"
 	"ponglehub.co.uk/tools/mudly/internal/config"
 	"ponglehub.co.uk/tools/mudly/internal/runner"
 	"ponglehub.co.uk/tools/mudly/internal/solver"
+	"ponglehub.co.uk/tools/mudly/internal/steps"
 	"ponglehub.co.uk/tools/mudly/internal/target"
 )
 
@@ -30,48 +31,10 @@ func setLogLevel() {
 	}
 }
 
-type CommandType int
+func buildTargets(options args_parser.Options) {
+	logrus.Debugf("Targets: %+v", options.Targets)
 
-const (
-	NONE_COMMAND CommandType = iota
-	DEPS_COMMAND
-	NO_DEPS_COMMAND
-)
-
-func getCommand(args []string) (CommandType, []string) {
-	if len(args) == 0 {
-		logrus.Fatalf("must provide a build target or command")
-	}
-
-	if strings.Contains(args[0], "+") {
-		return NONE_COMMAND, args
-	}
-
-	switch args[0] {
-	case "deps", "dependencies":
-		return DEPS_COMMAND, args[1:]
-	case "no-deps", "no-dependencies":
-		return NO_DEPS_COMMAND, args[1:]
-	default:
-		logrus.Fatalf("must provide a valid build target or command")
-		panic("logrus fatal should exit")
-	}
-}
-
-func buildTargets(command CommandType, args []string) {
-	targets := []target.Target{}
-	for _, path := range args {
-		target, err := target.ParseTarget(path)
-		if err != nil {
-			logrus.Fatalf("Error parsing target: %+v", err)
-		}
-
-		targets = append(targets, *target)
-	}
-
-	logrus.Debugf("Targets: %+v", targets)
-
-	configs, err := config.LoadConfigs(targets)
+	configs, err := config.LoadConfigs(options.Targets)
 	if err != nil {
 		logrus.Fatalf("Error loading config: %+v", err)
 	}
@@ -79,15 +42,15 @@ func buildTargets(command CommandType, args []string) {
 	logrus.Debugf("Configs: %+v", configs)
 
 	var stripTargets []target.Target
-	if command == DEPS_COMMAND {
-		stripTargets = targets
+	if options.OnlyDeps {
+		stripTargets = options.Targets
 	}
 
 	nodes, err := solver.Solve(&solver.SolveInputs{
-		Targets:      targets,
+		Targets:      options.Targets,
 		Configs:      configs,
 		StripTargets: stripTargets,
-		NoDeps:       command == NO_DEPS_COMMAND,
+		NoDeps:       options.NoDeps,
 	})
 	if err != nil {
 		logrus.Fatalf("Error in solver: %+v", err)
@@ -112,13 +75,27 @@ func buildTargets(command CommandType, args []string) {
 	}
 }
 
+func stop() {
+	err := steps.CleanupDevEnv()
+	if err != nil {
+		logrus.Fatalf(err.Error())
+	}
+}
+
 func main() {
 	setLogLevel()
 
 	args := os.Args[1:]
 	logrus.Debugf("Running mudly with args: %+v", args)
 
-	command, args := getCommand(args)
+	command, options, err := args_parser.Parse(args)
 
-	buildTargets(command, args)
+	switch command {
+	case args_parser.BUILD_COMMAND:
+		buildTargets(options)
+	case args_parser.STOP_COMMAND:
+		stop()
+	case args_parser.NO_COMMAND:
+		logrus.Fatalf(err.Error())
+	}
 }
