@@ -1,6 +1,5 @@
 ARTEFACT test
   STEP test
-    DEVENV db-test
     COMMAND go test ./...
 
 ARTEFACT mudly
