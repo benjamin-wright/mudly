@@ -2,7 +2,9 @@ package steps
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/sirupsen/logrus"
 	"ponglehub.co.uk/tools/mudly/internal/runner"
 )
 
@@ -57,4 +59,29 @@ func (d DevenvStep) Run(dir string, artefact string, env map[string]string) runn
 
 func (d DevenvStep) String() string {
 	return d.Name
+}
+
+func CleanupDevEnv() error {
+	output, err := getShellOutput("fetch", "docker compose ls --format json | jq '.[].Name' -r")
+	if err != nil {
+		return fmt.Errorf("failed to fetch running environments: %+v", err)
+	}
+
+	lines := strings.Split(output, "\n")
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "mudly__") {
+			name := strings.TrimPrefix(line, "mudly__")
+
+			logrus.Infof("{%s} cleaning...", name)
+			_, err := getShellOutput("fetch", fmt.Sprintf("docker compose -p mudly__%s down", name))
+			if err != nil {
+				logrus.Errorf("{%s} failed: %s", name, err.Error())
+			} else {
+				logrus.Infof("{%s}: done", name)
+			}
+		}
+	}
+
+	return nil
 }

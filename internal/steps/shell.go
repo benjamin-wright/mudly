@@ -90,3 +90,15 @@ func runShellCommand(command *shellCommand) bool {
 
 	return true
 }
+
+func getShellOutput(name string, command string) (string, error) {
+	cmd := exec.Command("sh", "-c", command)
+	cmd.Dir = path.Clean(".")
+
+	data, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
