@@ -472,6 +472,98 @@ func TestSolver(t *testing.T) {
 			},
 		},
 		{
+			Name:    "stepless artefact 2nd level",
+			Targets: []target.Target{{Dir: ".", Artefact: "image"}},
+			Configs: []config.Config{
+				{
+					Path: ".",
+					Env: map[string]string{
+						"GLOBAL_ENV": "value3",
+					},
+					Dockerfile: []config.Dockerfile{
+						{Name: "image-1", File: "image 1 content"},
+					},
+					Artefacts: []config.Artefact{
+						{
+							Name: "image",
+							Steps: []config.Step{
+								{
+									Name:       "image",
+									Dockerfile: "image-1",
+								},
+							},
+							DependsOn: []target.Target{
+								{Dir: ".", Artefact: "stepless"},
+							},
+						},
+						{
+							Name: "stepless",
+							Env: map[string]string{
+								"ARTEFACT_ENV": "value2",
+							},
+							DependsOn: []target.Target{
+								{Dir: ".", Artefact: "something"},
+							},
+						},
+						{
+							Name: "something",
+							Steps: []config.Step{
+								{
+									Name:    "echo",
+									Command: "echo \"hi\"",
+								},
+								{
+									Name:    "build",
+									Command: "whatevs",
+								},
+							},
+						},
+					},
+				},
+			},
+			Expected: []testNode{
+				{
+					Path:     ".",
+					Artefact: "image",
+					SharedEnv: map[string]string{
+						"GLOBAL_ENV": "value3",
+					},
+					Step: steps.DockerStep{
+						Name:       "image",
+						Dockerfile: "image 1 content",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{2},
+				},
+				{
+					Path:     ".",
+					Artefact: "something",
+					SharedEnv: map[string]string{
+						"GLOBAL_ENV": "value3",
+					},
+					Step: steps.CommandStep{
+						Name:    "echo",
+						Command: "echo \"hi\"",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{},
+				},
+				{
+					Path:     ".",
+					Artefact: "something",
+					SharedEnv: map[string]string{
+						"GLOBAL_ENV": "value3",
+					},
+					Step: steps.CommandStep{
+						Name:    "build",
+						Command: "whatevs",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{1},
+				},
+			},
+		},
+		{
 			Name:    "remote-pipeline",
 			Targets: []target.Target{{Dir: "subdir", Artefact: "image"}},
 			Configs: []config.Config{

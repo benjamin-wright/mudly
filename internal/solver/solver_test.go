@@ -454,3 +454,142 @@ func TestGetDedupedTargets(t *testing.T) {
 		})
 	}
 }
+
+func TestPruneLinks(t *testing.T) {
+	// To allow step-less artefacts properly, update the prune-links phase to not just eliminate links that reference stepless source artefacts,
+	// but to bridge gaps, i.e.
+	// artefact1 -> artefact2(stepless) -> artefact3 becomes artefact1 -> artefact3
+
+	for _, test := range []struct {
+		Name     string
+		Links    []link
+		Configs  []config.Config
+		Expected []link
+	}{
+		{
+			Name:     "empty in, empty out",
+			Links:    []link{},
+			Configs:  []config.Config{},
+			Expected: []link{},
+		},
+		{
+			Name: "same config",
+			Links: []link{
+				{
+					Source: target.Target{Dir: "subdir", Artefact: "a1"},
+					Target: target.Target{Dir: "subdir", Artefact: "a2"},
+				},
+			},
+			Configs: []config.Config{
+				{Path: "subdir", Artefacts: []config.Artefact{{Name: "a1", Pipeline: "pipeline"}, {Name: "a2", Pipeline: "pipeline"}}},
+			},
+			Expected: []link{
+				{
+					Source: target.Target{Dir: "subdir", Artefact: "a1"},
+					Target: target.Target{Dir: "subdir", Artefact: "a2"},
+				},
+			},
+		},
+		{
+			Name: "different configs",
+			Links: []link{
+				{
+					Source: target.Target{Dir: "subdir1", Artefact: "a1"},
+					Target: target.Target{Dir: "subdir2", Artefact: "a2"},
+				},
+			},
+			Configs: []config.Config{
+				{Path: "subdir1", Artefacts: []config.Artefact{{Name: "a1", Pipeline: "pipeline"}}},
+				{Path: "subdir2", Artefacts: []config.Artefact{{Name: "a2", Pipeline: "pipeline"}}},
+			},
+			Expected: []link{
+				{
+					Source: target.Target{Dir: "subdir1", Artefact: "a1"},
+					Target: target.Target{Dir: "subdir2", Artefact: "a2"},
+				},
+			},
+		},
+		{
+			Name: "prune stepless source",
+			Links: []link{
+				{
+					Source: target.Target{Dir: "subdir1", Artefact: "a1"},
+					Target: target.Target{Dir: "subdir2", Artefact: "a2"},
+				},
+			},
+			Configs: []config.Config{
+				{Path: "subdir1", Artefacts: []config.Artefact{{Name: "a1"}}},
+				{Path: "subdir2", Artefacts: []config.Artefact{{Name: "a2", Pipeline: "pipeline"}}},
+			},
+			Expected: []link{},
+		},
+		{
+			Name: "prune stepless target",
+			Links: []link{
+				{
+					Source: target.Target{Dir: "subdir1", Artefact: "a1"},
+					Target: target.Target{Dir: "subdir2", Artefact: "a2"},
+				},
+			},
+			Configs: []config.Config{
+				{Path: "subdir1", Artefacts: []config.Artefact{{Name: "a1", Pipeline: "pipeline"}}},
+				{Path: "subdir2", Artefacts: []config.Artefact{{Name: "a2"}}},
+			},
+			Expected: []link{},
+		},
+		{
+			Name: "bridge stepless to dependencies",
+			Links: []link{
+				{
+					Source: target.Target{Dir: "subdir1", Artefact: "c1"},
+					Target: target.Target{Dir: "subdir2", Artefact: "c2"},
+				},
+			},
+			Configs: []config.Config{
+				{Path: "subdir1", Artefacts: []config.Artefact{{Name: "c1", Pipeline: "pipeline"}}},
+				{
+					Path: "subdir2",
+					Artefacts: []config.Artefact{
+						{
+							Name: "c2",
+							DependsOn: []target.Target{
+								{Dir: "subdir2", Artefact: "d1"},
+								{Dir: "subdir2", Artefact: "d2"},
+							},
+						},
+						{
+							Name:     "d1",
+							Pipeline: "pipeline",
+							DependsOn: []target.Target{
+								{Dir: "subdir2", Artefact: "d3"},
+							},
+						},
+						{
+							Name: "d2",
+							DependsOn: []target.Target{
+								{Dir: "subdir2", Artefact: "d4"},
+							},
+						},
+						{Name: "d3", Pipeline: "pipeline"},
+						{Name: "d4", Pipeline: "pipeline"},
+					},
+				},
+			},
+			Expected: []link{
+				{
+					Source: target.Target{Dir: "subdir1", Artefact: "c1"},
+					Target: target.Target{Dir: "subdir2", Artefact: "d1"},
+				},
+				{
+					Source: target.Target{Dir: "subdir1", Artefact: "c1"},
+					Target: target.Target{Dir: "subdir2", Artefact: "d4"},
+				},
+			},
+		},
+	} {
+		t.Run(test.Name, func(u *testing.T) {
+			pruned := pruneLinks(test.Links, test.Configs)
+			assert.Equal(u, test.Expected, pruned)
+		})
+	}
+}
