@@ -180,17 +180,57 @@ func getDedupedTargets(targets []target.Target, links []link) []target.Target {
 }
 
 func pruneLinks(links []link, configs []config.Config) []link {
-	keepers := []link{}
+	keepers := append([]link{}, links...)
+	running := true
 
-	for _, l := range links {
-		for _, c := range configs {
-			if c.Path == l.Source.Dir {
-				for _, a := range c.Artefacts {
-					if a.Name == l.Source.Artefact {
-						if len(a.Steps) > 0 || a.Pipeline != "" {
-							keepers = append(keepers, l)
+	for running {
+		running = false
+		inputs := append([]link{}, keepers...)
+		keepers = []link{}
+
+		for _, l := range inputs {
+			var sourceArtefact *config.Artefact
+
+			for _, c := range configs {
+				if c.Path == l.Source.Dir {
+					for id, a := range c.Artefacts {
+						if a.Name == l.Source.Artefact {
+							sourceArtefact = &c.Artefacts[id]
 						}
 					}
+				}
+			}
+
+			if sourceArtefact == nil || (len(sourceArtefact.Steps) == 0 && sourceArtefact.Pipeline == "") {
+				continue
+			}
+
+			var targetArtefact *config.Artefact
+
+			for _, c := range configs {
+				if c.Path == l.Target.Dir {
+					for id, a := range c.Artefacts {
+						if a.Name == l.Target.Artefact {
+							targetArtefact = &c.Artefacts[id]
+						}
+					}
+				}
+			}
+
+			if targetArtefact == nil {
+				continue
+			}
+
+			if len(targetArtefact.Steps) > 0 || targetArtefact.Pipeline != "" {
+				keepers = append(keepers, l)
+			} else {
+				running = true
+				source := l.Source
+				for _, t := range targetArtefact.DependsOn {
+					keepers = append(keepers, link{
+						Source: target.Target{Dir: source.Dir, Artefact: source.Artefact},
+						Target: target.Target{Dir: t.Dir, Artefact: t.Artefact},
+					})
 				}
 			}
 		}
@@ -423,6 +463,7 @@ func Solve(inputs *SolveInputs) ([]*runner.Node, error) {
 	// Remove any targets that were only meant for dependency gathering
 	stripped := getStrippedTargets(deduped, inputs.StripTargets)
 
+	// Remove links to upstream artefacts that don't have any steps
 	pruned := pruneLinks(links, inputs.Configs)
 
 	if inputs.NoDeps {
