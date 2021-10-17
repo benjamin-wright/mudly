@@ -24,6 +24,7 @@ func (d DevenvStep) isRunning(dir string, artefact string) bool {
 			fmt.Sprintf("docker compose ls | grep \"mudly__%s\"", d.Name),
 		},
 		stdin: d.Compose,
+		test:  true,
 	})
 }
 
