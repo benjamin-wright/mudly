@@ -2,8 +2,10 @@ package runner
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/sirupsen/logrus"
+	"ponglehub.co.uk/tools/mudly/internal/utils"
 )
 
 type runResult struct {
@@ -67,7 +69,15 @@ func getRunnableNodes(nodes []*Node) []*Node {
 
 func runNode(node *Node, outputChan chan<- runResult) {
 	logrus.Infof("{%s} %s[%s]: STARTED", node.Path, node.Artefact, node.Step)
-	result := node.Step.Run(node.Path, node.Artefact, node.SharedEnv)
+
+	merged := utils.MergeMaps(
+		node.SharedEnv,
+		map[string]string{
+			"MUDLY_PWD": os.Getenv("PWD"),
+		},
+	)
+
+	result := node.Step.Run(node.Path, node.Artefact, merged)
 
 	switch result {
 	case COMMAND_SUCCESS:
