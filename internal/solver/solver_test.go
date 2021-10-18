@@ -174,13 +174,15 @@ func TestGetPipeline(t *testing.T) {
 			Name: "take pipeline steps from remote reference",
 			Configs: []config.Config{
 				{
-					Path: "subdir",
+					Path:  "subdir",
+					IsDir: true,
 					Pipelines: []config.Pipeline{
 						{Name: "pipeline-name", Steps: []config.Step{{Name: "not me"}}},
 					},
 				},
 				{
-					Path: "otherdir",
+					Path:  "otherdir",
+					IsDir: true,
 					Pipelines: []config.Pipeline{
 						{Name: "wrong-one", Steps: []config.Step{{Name: "hi"}}},
 						{Name: "pipeline-name", Steps: []config.Step{{Name: "ho"}}},
@@ -188,7 +190,8 @@ func TestGetPipeline(t *testing.T) {
 				},
 			},
 			Config: &config.Config{
-				Path: "subdir",
+				Path:  "subdir",
+				IsDir: true,
 				Pipelines: []config.Pipeline{
 					{Name: "pipeline-name", Steps: []config.Step{{Name: "not me"}}},
 				},
@@ -201,7 +204,8 @@ func TestGetPipeline(t *testing.T) {
 		{
 			Name: "error if pipeline not found",
 			Config: &config.Config{
-				Path: "some-dir",
+				Path:  "some-dir",
+				IsDir: true,
 				Pipelines: []config.Pipeline{
 					{Name: "pipeline-name", Steps: []config.Step{{Name: "ho"}}},
 				},
@@ -250,7 +254,8 @@ func TestCollectDependencies(t *testing.T) {
 			},
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name: "artefact-1",
@@ -278,7 +283,8 @@ func TestCollectDependencies(t *testing.T) {
 			},
 			Configs: []config.Config{
 				{
-					Path: "subdir1",
+					Path:  "subdir1",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name: "artefact-1",
@@ -292,7 +298,8 @@ func TestCollectDependencies(t *testing.T) {
 					},
 				},
 				{
-					Path: "subdir2",
+					Path:  "subdir2",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name: "artefact-2",
@@ -314,7 +321,8 @@ func TestCollectDependencies(t *testing.T) {
 			},
 			Configs: []config.Config{
 				{
-					Path: "subdir1",
+					Path:  "subdir1",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name: "artefact-1",
@@ -328,7 +336,8 @@ func TestCollectDependencies(t *testing.T) {
 					},
 				},
 				{
-					Path: "subdir2",
+					Path:  "subdir2",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name: "artefact-2",

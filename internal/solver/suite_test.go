@@ -58,7 +58,8 @@ func TestSolver(t *testing.T) {
 			Targets: []target.Target{{Dir: ".", Artefact: "image"}},
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Dockerfile: []config.Dockerfile{
 						{Name: "my-image", File: "dockerfile contents"},
 					},
@@ -109,7 +110,8 @@ func TestSolver(t *testing.T) {
 			Targets: []target.Target{{Dir: ".", Artefact: "image"}, {Dir: ".", Artefact: "something"}},
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Dockerfile: []config.Dockerfile{
 						{Name: "my-image", File: "my dockerfile contents"},
 					},
@@ -193,7 +195,8 @@ func TestSolver(t *testing.T) {
 			Targets: []target.Target{{Dir: ".", Artefact: "image"}},
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Env: map[string]string{
 						"GLOBAL_ENV": "value3",
 					},
@@ -318,7 +321,8 @@ func TestSolver(t *testing.T) {
 			StripTargets: []target.Target{{Dir: ".", Artefact: "image"}},
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Env: map[string]string{
 						"GLOBAL_ENV": "value3",
 					},
@@ -409,7 +413,8 @@ func TestSolver(t *testing.T) {
 			StripTargets: []target.Target{{Dir: ".", Artefact: "image"}},
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Env: map[string]string{
 						"GLOBAL_ENV": "value3",
 					},
@@ -476,7 +481,8 @@ func TestSolver(t *testing.T) {
 			Targets: []target.Target{{Dir: ".", Artefact: "image"}},
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Env: map[string]string{
 						"GLOBAL_ENV": "value3",
 					},
@@ -568,7 +574,8 @@ func TestSolver(t *testing.T) {
 			Targets: []target.Target{{Dir: "subdir", Artefact: "image"}},
 			Configs: []config.Config{
 				{
-					Path: "subdir",
+					Path:  "subdir",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name:     "image",
@@ -577,7 +584,8 @@ func TestSolver(t *testing.T) {
 					},
 				},
 				{
-					Path: "otherdir",
+					Path:  "otherdir",
+					IsDir: true,
 					Dockerfile: []config.Dockerfile{
 						{Name: "my-image", File: "dockerfile contents"},
 					},
@@ -629,7 +637,8 @@ func TestSolver(t *testing.T) {
 			NoDeps:  true,
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Env: map[string]string{
 						"GLOBAL_ENV": "value3",
 					},
@@ -726,7 +735,8 @@ func TestSolver(t *testing.T) {
 			Targets: []target.Target{{Dir: ".", Artefact: "image"}},
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					DevEnv: []config.DevEnv{
 						{
 							Name:    "myenv",
@@ -790,7 +800,8 @@ func TestSolver(t *testing.T) {
 			NoDeps:  true,
 			Configs: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Pipelines: []config.Pipeline{
 						{
 							Name: "my-pipeline",

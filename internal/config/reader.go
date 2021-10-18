@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 )
 
@@ -11,14 +12,25 @@ type reader struct {
 	index int
 }
 
-func openFile(filepath string) (*reader, error) {
+func openFile(filepath string) (*reader, bool, error) {
+	isDir, err := fsInstance.IsDir(filepath)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to open config file: %+v", err)
+	}
+
+	if isDir {
+		filepath = path.Clean(filepath + "/Mudfile")
+	} else {
+		filepath = path.Clean(filepath + ".Mudfile")
+	}
+
 	data, err := fsInstance.ReadFile(filepath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open config file: %+v", err)
+		return nil, false, fmt.Errorf("failed to open config file: %+v", err)
 	}
 
 	if strings.Contains(string(data), "\t") {
-		return nil, errors.New("your file has tabs in it")
+		return nil, false, errors.New("your file has tabs in it")
 	}
 
 	lines := strings.Split(string(data), "\n")
@@ -27,7 +39,7 @@ func openFile(filepath string) (*reader, error) {
 	return &reader{
 		lines: lines,
 		index: index,
-	}, nil
+	}, isDir, nil
 }
 
 func (r *reader) prune() {

@@ -63,7 +63,7 @@ func getPipeline(configs []config.Config, cfg *config.Config, artefact *config.A
 		if strings.Contains(artefact.Pipeline, " ") {
 			parts := strings.Split(artefact.Pipeline, " ")
 			pipelineTarget := target.Target{Dir: parts[0], Artefact: parts[1]}
-			pipelineTarget = pipelineTarget.Rebase(target.Target{Dir: cfg.Path})
+			pipelineTarget = cfg.Rebase(pipelineTarget)
 
 			for _, c := range configs {
 				if c.Path == pipelineTarget.Dir {
@@ -97,13 +97,13 @@ func collectDependencies(targets []target.Target, configs []config.Config) ([]li
 		newTargets := []target.Target{}
 
 		for _, target := range targets {
-			_, artefact, err := getArtefact(target, configs)
+			cfg, artefact, err := getArtefact(target, configs)
 			if err != nil {
 				return nil, err
 			}
 
 			for _, dep := range artefact.DependsOn {
-				rebased := dep.Rebase(target)
+				rebased := cfg.Rebase(dep)
 
 				link := link{
 					Target: rebased,

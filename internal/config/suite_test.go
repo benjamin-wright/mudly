@@ -1,12 +1,11 @@
 package config_test
 
 import (
-	"errors"
-	"path"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"ponglehub.co.uk/tools/mudly/internal/config"
 	"ponglehub.co.uk/tools/mudly/internal/target"
 )
@@ -36,27 +35,28 @@ func dedent(file string) string {
 	return strings.Join(trimmed, "\n")
 }
 
-type ConfigFile struct {
-	Path    string
-	Content string
+type MockFS struct {
+	mock.Mock
 }
 
-type MockFS struct {
-	files []ConfigFile
+func (m MockFS) IsDir(filepath string) (bool, error) {
+	args := m.Called(filepath)
+	return args.Bool(0), args.Error(1)
 }
 
 func (m MockFS) ReadFile(filepath string) ([]byte, error) {
-	for _, file := range m.files {
-		if path.Clean(file.Path) == filepath {
-			return []byte(file.Content), nil
-		}
-	}
+	args := m.Called(filepath)
+	return []byte(args.String(0)), args.Error(1)
+}
 
-	return nil, errors.New("File not found")
+type ConfigFile struct {
+	Path     string
+	IsDir    bool
+	FilePath string
+	Content  string
 }
 
 func TestLoadConfig(t *testing.T) {
-
 	for _, test := range []struct {
 		Name     string
 		Files    []ConfigFile
@@ -67,7 +67,9 @@ func TestLoadConfig(t *testing.T) {
 			Name: "all-in-one",
 			Files: []ConfigFile{
 				{
-					Path: "../other/Mudfile",
+					Path:     "../other",
+					IsDir:    true,
+					FilePath: "../other/Mudfile",
 					Content: dedent(`
                         PIPELINE remote-pipeline
 						  STEP remote-step
@@ -75,7 +77,9 @@ func TestLoadConfig(t *testing.T) {
                     `),
 				},
 				{
-					Path: "../somedir/Mudfile",
+					Path:     "../somedir",
+					IsDir:    true,
+					FilePath: "../somedir/Mudfile",
 					Content: dedent(`
                         ARTEFACT not-referenced
                           STEP do-something-else
@@ -89,7 +93,9 @@ func TestLoadConfig(t *testing.T) {
                     `),
 				},
 				{
-					Path: "./Mudfile",
+					Path:     ".",
+					IsDir:    true,
+					FilePath: "Mudfile",
 					Content: dedent(`
                         ENV GLOBAL_VAR=value1
                         
@@ -148,7 +154,8 @@ func TestLoadConfig(t *testing.T) {
 			Targets: []target.Target{{Dir: "."}},
 			Expected: []config.Config{
 				{
-					Path: ".",
+					Path:  ".",
+					IsDir: true,
 					Env: map[string]string{
 						"GLOBAL_VAR": "value1",
 						"G_2_VAR":    "var2",
@@ -219,7 +226,8 @@ func TestLoadConfig(t *testing.T) {
 					},
 				},
 				{
-					Path: "../somedir",
+					Path:  "../somedir",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name: "not-referenced",
@@ -248,7 +256,8 @@ func TestLoadConfig(t *testing.T) {
 					},
 				},
 				{
-					Path: "../other",
+					Path:  "../other",
+					IsDir: true,
 					Pipelines: []config.Pipeline{
 						{
 							Name: "remote-pipeline",
@@ -267,31 +276,42 @@ func TestLoadConfig(t *testing.T) {
 			Name: "nested",
 			Files: []ConfigFile{
 				{
-					Path: "./other/deeper/Mudfile",
+					Path:     "other/deeper",
+					IsDir:    true,
+					FilePath: "other/deeper/Mudfile",
 					Content: dedent(`
-                        ARTEFACT remote-call-3
+		                ARTEFACT remote-call-3
 						  STEP do-something
-                    `),
+		            `),
 				},
 				{
-					Path: "./other/Mudfile",
+					Path:     "other",
+					IsDir:    true,
+					FilePath: "other/Mudfile",
 					Content: dedent(`
-                        ARTEFACT remote-call-2
+		                ARTEFACT remote-call-2
 						  DEPENDS ON ./deeper+remote-call-3
-                    `),
+						  DEPENDS ON +remote-call-4
+						
+						ARTEFACT remote-call-4
+						  STEP do-something-else
+		            `),
 				},
 				{
-					Path: "./subdir/Mudfile",
+					Path:     "subdir",
+					IsDir:    true,
+					FilePath: "subdir/Mudfile",
 					Content: dedent(`
 						ARTEFACT remote-call-1
 						  DEPENDS ON ../other+remote-call-2
-                    `),
+		            `),
 				},
 			},
 			Targets: []target.Target{{Dir: "subdir"}},
 			Expected: []config.Config{
 				{
-					Path: "subdir",
+					Path:  "subdir",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name: "remote-call-1",
@@ -303,19 +323,116 @@ func TestLoadConfig(t *testing.T) {
 					},
 				},
 				{
-					Path: "other",
+					Path:  "other",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name: "remote-call-2",
+							DependsOn: []target.Target{
+								{
+									Dir:      "deeper",
+									Artefact: "remote-call-3",
+								},
+								{
+									Dir:      ".",
+									Artefact: "remote-call-4",
+								},
+							},
+						},
+						{
+							Name:  "remote-call-4",
+							Steps: []config.Step{{Name: "do-something-else"}},
+						},
+					},
+				},
+				{
+					Path:  "other/deeper",
+					IsDir: true,
+					Artefacts: []config.Artefact{
+						{
+							Name:  "remote-call-3",
+							Steps: []config.Step{{Name: "do-something"}},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "nested and named",
+			Files: []ConfigFile{
+				{
+					Path:     "other/deeper",
+					IsDir:    true,
+					FilePath: "other/deeper/Mudfile",
+					Content: dedent(`
+		                ARTEFACT remote-call-3
+						  STEP do-something
+		            `),
+				},
+				{
+					Path:     "other/named",
+					IsDir:    false,
+					FilePath: "other/named.Mudfile",
+					Content: dedent(`
+		                ARTEFACT remote-call-2
+						  DEPENDS ON ./deeper+remote-call-3
+						  DEPENDS ON +remote-call-4
+						
+						ARTEFACT remote-call-4
+						  STEP do-something-else
+		            `),
+				},
+				{
+					Path:     "subdir",
+					IsDir:    true,
+					FilePath: "subdir/Mudfile",
+					Content: dedent(`
+						ARTEFACT remote-call-1
+						  DEPENDS ON ../other/named+remote-call-2
+		            `),
+				},
+			},
+			Targets: []target.Target{{Dir: "subdir"}},
+			Expected: []config.Config{
+				{
+					Path:  "subdir",
+					IsDir: true,
+					Artefacts: []config.Artefact{
+						{
+							Name: "remote-call-1",
 							DependsOn: []target.Target{{
-								Dir:      "deeper",
-								Artefact: "remote-call-3",
+								Dir:      "../other/named",
+								Artefact: "remote-call-2",
 							}},
 						},
 					},
 				},
 				{
-					Path: "other/deeper",
+					Path:  "other/named",
+					IsDir: false,
+					Artefacts: []config.Artefact{
+						{
+							Name: "remote-call-2",
+							DependsOn: []target.Target{
+								{
+									Dir:      "deeper",
+									Artefact: "remote-call-3",
+								},
+								{
+									Dir:      ".",
+									Artefact: "remote-call-4",
+								},
+							},
+						},
+						{
+							Name:  "remote-call-4",
+							Steps: []config.Step{{Name: "do-something-else"}},
+						},
+					},
+				},
+				{
+					Path:  "other/deeper",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name:  "remote-call-3",
@@ -329,25 +446,30 @@ func TestLoadConfig(t *testing.T) {
 			Name: "remote pipeline rebase test",
 			Files: []ConfigFile{
 				{
-					Path: "./other/Mudfile",
+					Path:     "other",
+					IsDir:    true,
+					FilePath: "other/Mudfile",
 					Content: dedent(`
-                        PIPELINE remote-pipeline
+		                PIPELINE remote-pipeline
 						  STEP remote-step
 						    COMMAND echo "hello shared"
-                    `),
+		            `),
 				},
 				{
-					Path: "./subdir/Mudfile",
+					Path:     "subdir",
+					IsDir:    true,
+					FilePath: "subdir/Mudfile",
 					Content: dedent(`
 						ARTEFACT remote-pipeline
 						  PIPELINE ../other remote-pipeline
-                    `),
+		            `),
 				},
 			},
 			Targets: []target.Target{{Dir: "subdir"}},
 			Expected: []config.Config{
 				{
-					Path: "subdir",
+					Path:  "subdir",
+					IsDir: true,
 					Artefacts: []config.Artefact{
 						{
 							Name:     "remote-pipeline",
@@ -356,7 +478,8 @@ func TestLoadConfig(t *testing.T) {
 					},
 				},
 				{
-					Path: "other",
+					Path:  "other",
+					IsDir: true,
 					Pipelines: []config.Pipeline{
 						{
 							Name: "remote-pipeline",
@@ -375,7 +498,9 @@ func TestLoadConfig(t *testing.T) {
 			Name: "compose devenv",
 			Files: []ConfigFile{
 				{
-					Path: "./subdir/Mudfile",
+					Path:     "subdir",
+					IsDir:    true,
+					FilePath: "subdir/Mudfile",
 					Content: dedent(`
 						DEVENV db-env
 						  COMPOSE
@@ -393,13 +518,14 @@ func TestLoadConfig(t *testing.T) {
 						  STEP run-2
 						    DEVENV db-env
 						    COMMAND echo "yo"
-                    `),
+		            `),
 				},
 			},
 			Targets: []target.Target{{Dir: "subdir"}},
 			Expected: []config.Config{
 				{
-					Path: "subdir",
+					Path:  "subdir",
+					IsDir: true,
 					DevEnv: []config.DevEnv{
 						{
 							Name:    "db-env",
@@ -433,11 +559,13 @@ func TestLoadConfig(t *testing.T) {
 		},
 	} {
 		t.Run(test.Name, func(u *testing.T) {
-			config.SetFS(
-				&MockFS{
-					files: test.Files,
-				},
-			)
+			mock := MockFS{}
+			config.SetFS(&mock)
+
+			for _, file := range test.Files {
+				mock.On("IsDir", file.Path).Return(file.IsDir, nil)
+				mock.On("ReadFile", file.FilePath).Return(file.Content, nil)
+			}
 
 			conf, err := config.LoadConfigs(test.Targets)
 
@@ -450,6 +578,8 @@ func TestLoadConfig(t *testing.T) {
 					assert.Fail(u, "expected a config response")
 				}
 			}
+
+			mock.AssertExpectations(u)
 		})
 	}
 }

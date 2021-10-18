@@ -3,10 +3,10 @@ package config
 import (
 	"errors"
 	"fmt"
-	"path"
 	"regexp"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"ponglehub.co.uk/tools/mudly/internal/target"
 )
 
@@ -31,35 +31,35 @@ func getDirs(targets []target.Target) []string {
 }
 
 func getDependencyTargets(config Config) []target.Target {
-	root := target.Target{Dir: config.Path}
-
 	newTargets := []target.Target{}
 
 	for _, artefact := range config.Artefacts {
 		for _, target := range artefact.DependsOn {
-			newTargets = append(newTargets, target.Rebase(root))
+			newTargets = append(newTargets, config.Rebase(target))
 		}
 
 		parts := strings.Split(artefact.Pipeline, " ")
 		if len(parts) == 2 {
 			pipelineTarget := target.Target{Dir: parts[0], Artefact: "pipeline"}
-			newTargets = append(newTargets, pipelineTarget.Rebase(root))
+			newTargets = append(newTargets, config.Rebase(pipelineTarget))
 		}
 	}
+
+	logrus.Infof("%+v -> %+v", config, newTargets)
 
 	return newTargets
 }
 
 func LoadConfigs(targets []target.Target) ([]Config, error) {
 	configs := []Config{}
-
 	for {
 		newTargets := []target.Target{}
 
 		for _, dir := range getDirs(targets) {
 			got := false
+
 			for _, cfg := range configs {
-				if cfg.Path == dir {
+				if dir == cfg.Path {
 					got = true
 				}
 			}
@@ -89,13 +89,14 @@ func LoadConfigs(targets []target.Target) ([]Config, error) {
 }
 
 func getConfigData(filepath string) (Config, error) {
-	cfg := Config{}
-
-	cfg.Path = filepath
-
-	r, err := openFile(path.Join(filepath, "Mudfile"))
+	r, isDir, err := openFile(filepath)
 	if err != nil {
-		return cfg, err
+		return Config{}, err
+	}
+
+	cfg := Config{
+		Path:  filepath,
+		IsDir: isDir,
 	}
 
 	r.prune()
