@@ -18,7 +18,7 @@ A typical target consists of;
 
 so
 
-`mudly ../otherdir+thing1` would build the `thing1` artefact from a `Mudfile` in the sibling directory `otherdir`.
+`mudly ../other+thing1` would build the `thing1` artefact from either a) a `Mudfile` in the sibling directory `other`, or b) an `other.Mudfile` in the parent directory. 
 
 `mudly +image` would build the `image` target from a Mudfile in the current working directory.
 
