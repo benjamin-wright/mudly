@@ -842,6 +842,89 @@ func TestSolver(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name:    "isdir linking",
+			Targets: []target.Target{{Dir: "subdir", Artefact: "image"}},
+			Configs: []config.Config{
+				{
+					Path:  "subdir",
+					IsDir: true,
+					Artefacts: []config.Artefact{
+						{
+							Name: "image",
+							DependsOn: []target.Target{
+								{Dir: "../otherdir/named", Artefact: "remote-artefact"},
+							},
+							Steps: []config.Step{
+								{
+									Name:    "deploy",
+									Command: "deploy something",
+								},
+							},
+						},
+					},
+				},
+				{
+					Path:  "otherdir/named",
+					IsDir: false,
+					Artefacts: []config.Artefact{
+						{
+							Name: "remote-artefact",
+							DependsOn: []target.Target{
+								{Dir: ".", Artefact: "secondary-artefact"},
+							},
+							Steps: []config.Step{
+								{
+									Name:    "build",
+									Command: "go build -o ./bin/mudly ./cmd/mudly",
+								},
+							},
+						},
+						{
+							Name: "secondary-artefact",
+							Steps: []config.Step{
+								{
+									Name:    "deps",
+									Command: "go get",
+								},
+							},
+						},
+					},
+				},
+			},
+			Expected: []testNode{
+				{
+					Path:     "subdir",
+					Artefact: "image",
+					Step: steps.CommandStep{
+						Name:    "deploy",
+						Command: "deploy something",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{1},
+				},
+				{
+					Path:     "otherdir",
+					Artefact: "remote-artefact",
+					Step: steps.CommandStep{
+						Name:    "build",
+						Command: "go build -o ./bin/mudly ./cmd/mudly",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{2},
+				},
+				{
+					Path:     "otherdir",
+					Artefact: "secondary-artefact",
+					Step: steps.CommandStep{
+						Name:    "deps",
+						Command: "go get",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{},
+				},
+			},
+		},
 	} {
 		t.Run(test.Name, func(u *testing.T) {
 			nodes, err := solver.Solve(&solver.SolveInputs{

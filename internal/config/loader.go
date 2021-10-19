@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"ponglehub.co.uk/tools/mudly/internal/target"
 )
 
@@ -44,8 +43,6 @@ func getDependencyTargets(config Config) []target.Target {
 			newTargets = append(newTargets, config.Rebase(pipelineTarget))
 		}
 	}
-
-	logrus.Infof("%+v -> %+v", config, newTargets)
 
 	return newTargets
 }

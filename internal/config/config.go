@@ -50,26 +50,6 @@ func (c *Config) Rebase(t target.Target) target.Target {
 	}
 }
 
-// func (c *Config) IsMatch(filepath string) bool {
-// 	targetDir := path.Clean(filepath)
-
-// 	if c.Name == "Mudfile" {
-// 		return targetDir == c.Path
-// 	} else {
-// 		return path.Clean(fmt.Sprintf("%s.Mudfile", targetDir)) == path.Clean(fmt.Sprintf("%s/%s", c.Path, c.Name))
-// 	}
-// }
-
-// func (c *Config) Retarget(t target.Target) target.Target {
-// 	if c.Name != "Mudfile" {
-// 		if t.Dir == "." {
-// 			t.Dir = strings.Replace(c.Name, ".Mudfile", "", 1)
-// 		}
-// 	}
-
-// 	return t
-// }
-
 type Pipeline struct {
 	Name  string
 	Env   map[string]string

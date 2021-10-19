@@ -206,12 +206,14 @@ func pruneLinks(links []link, configs []config.Config) []link {
 			}
 
 			var targetArtefact *config.Artefact
+			var targetConfig *config.Config
 
 			for _, c := range configs {
 				if c.Path == l.Target.Dir {
 					for id, a := range c.Artefacts {
 						if a.Name == l.Target.Artefact {
 							targetArtefact = &c.Artefacts[id]
+							targetConfig = &c
 						}
 					}
 				}
@@ -229,7 +231,7 @@ func pruneLinks(links []link, configs []config.Config) []link {
 				for _, t := range targetArtefact.DependsOn {
 					keepers = append(keepers, link{
 						Source: target.Target{Dir: source.Dir, Artefact: source.Artefact},
-						Target: target.Target{Dir: t.Dir, Artefact: t.Artefact},
+						Target: targetConfig.Rebase(t),
 					})
 				}
 			}
@@ -294,7 +296,7 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 		if artefact.Condition != "" {
 			nodes.AddNode(cfg.Path, artefact.Name, &runner.Node{
 				SharedEnv: utils.MergeMaps(cfg.Env, artefact.Env),
-				Path:      cfg.Path,
+				Path:      cfg.WorkDir(),
 				Artefact:  artefact.Name,
 				Step:      steps.ArtefactStep{Condition: artefact.Condition},
 				State:     runner.STATE_PENDING,
@@ -325,7 +327,7 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 
 			newNode := runner.Node{
 				SharedEnv: utils.MergeMaps(cfg.Env, pipeline.Env, artefact.Env),
-				Path:      cfg.Path,
+				Path:      cfg.WorkDir(),
 				Artefact:  artefact.Name,
 				Step: steps.DevenvStep{
 					Name:    d.Name,
@@ -354,7 +356,7 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 
 				newNode := runner.Node{
 					SharedEnv: utils.MergeMaps(cfg.Env, pipeline.Env, artefact.Env),
-					Path:      cfg.Path,
+					Path:      cfg.WorkDir(),
 					Artefact:  artefact.Name,
 					Step: steps.DevenvStep{
 						Name:    d.Name,
@@ -392,7 +394,7 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 
 			newNode := runner.Node{
 				SharedEnv: utils.MergeMaps(cfg.Env, pipeline.Env, artefact.Env),
-				Path:      cfg.Path,
+				Path:      cfg.WorkDir(),
 				Artefact:  artefact.Name,
 				Step:      runnable,
 				State:     runner.STATE_PENDING,

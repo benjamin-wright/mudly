@@ -595,6 +595,90 @@ func TestPruneLinks(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "bridging failure",
+			Links: []link{
+				{
+					Source: target.Target{Dir: ".", Artefact: "test"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "certs"},
+				},
+				{
+					Source: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "certs"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "root-cert"},
+				},
+				{
+					Source: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "certs"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "test-cert"},
+				},
+				{
+					Source: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "root-cert"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "ca-cert"},
+				},
+				{
+					Source: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "test-cert"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "ca-cert"},
+				},
+			},
+			Configs: []config.Config{
+				{
+					Path:  ".",
+					IsDir: true,
+					Artefacts: []config.Artefact{
+						{
+							Name:      "test",
+							Pipeline:  "pipeline",
+							DependsOn: []target.Target{{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "certs"}},
+						},
+					},
+				},
+				{
+					Path:  "../../libraries/mudfiles/cockroachdb",
+					IsDir: false,
+					Artefacts: []config.Artefact{
+						{
+							Name: "certs",
+							DependsOn: []target.Target{
+								{Dir: ".", Artefact: "test-cert"},
+								{Dir: ".", Artefact: "root-cert"},
+							},
+						},
+						{
+							Name:     "test-cert",
+							Pipeline: "pipeline",
+							DependsOn: []target.Target{
+								{Dir: ".", Artefact: "ca-cert"},
+							},
+						},
+						{
+							Name:     "root-cert",
+							Pipeline: "pipeline",
+							DependsOn: []target.Target{
+								{Dir: ".", Artefact: "ca-cert"},
+							},
+						},
+						{Name: "ca-cert", Pipeline: "pipeline"},
+					},
+				},
+			},
+			Expected: []link{
+				{
+					Source: target.Target{Dir: ".", Artefact: "test"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "test-cert"},
+				},
+				{
+					Source: target.Target{Dir: ".", Artefact: "test"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "root-cert"},
+				},
+				{
+					Source: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "root-cert"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "ca-cert"},
+				},
+				{
+					Source: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "test-cert"},
+					Target: target.Target{Dir: "../../libraries/mudfiles/cockroachdb", Artefact: "ca-cert"},
+				},
+			},
+		},
 	} {
 		t.Run(test.Name, func(u *testing.T) {
 			pruned := pruneLinks(test.Links, test.Configs)
