@@ -18,6 +18,8 @@ Watch this space...
 
 # VSCode Extension Installation
 
-Head back to the repo, find your mudly release version and download the mudly-formatter.vsix file.
+```
+curl -L -o ./mudly-formatter.vsix https://github.com/benjamin-wright/mudly/releases/download/$RELEASE/mudly-formatter.vsix
+```
 
 In VS Code, Open `extensions` and select the `...` option from the top-right of the explorer tab. Click `Install from VSIX...` and select the downloaded `mudly-formatter.vsix` file. Profit.
