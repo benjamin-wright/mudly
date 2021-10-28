@@ -276,7 +276,7 @@ func getArtefact(r *reader) (Artefact, error) {
 
 			artefact.Env[name] = value
 		case PIPELINE_LINE:
-			name, err := getPipelineLink(r)
+			name, err := getConfigLinked(r)
 			if err != nil {
 				return artefact, err
 			}
@@ -301,7 +301,7 @@ func getArtefact(r *reader) (Artefact, error) {
 
 			artefact.Condition = condition
 		case DEVENV_LINE:
-			devenv, err := getStringArg(r, nil)
+			devenv, err := getConfigLinked(r)
 			if err != nil {
 				return artefact, err
 			}
@@ -380,13 +380,13 @@ func getPipeline(r *reader) (Pipeline, error) {
 	return pipeline, nil
 }
 
-func getPipelineLink(r *reader) (string, error) {
+func getConfigLinked(r *reader) (string, error) {
 	trimmed := strings.TrimSpace(r.line())
 
 	parts := strings.Split(trimmed, " ")
 
 	if len(parts) < 2 || len(parts) > 3 {
-		return "", fmt.Errorf("pipeline unknown syntax error for line \"%s\"", r.line())
+		return "", fmt.Errorf("unknown syntax error for line \"%s\"", r.line())
 	}
 
 	return strings.Join(parts[1:], " "), nil
@@ -497,7 +497,7 @@ func getStep(r *reader) (Step, error) {
 
 			step.Dockerfile = dockerfile
 		case DEVENV_LINE:
-			devenv, err := getStringArg(r, nil)
+			devenv, err := getConfigLinked(r)
 			if err != nil {
 				return step, err
 			}

@@ -54,5 +54,5 @@ ARTEFACT remote-watch
 PIPELINE test-pipeline
   ENV VAR_4=value4
   STEP build
-    DEVENV db-env
+    DEVENV db-env ./somewhere-else
     COMMAND go build $(pwd) -o=bin/mudly -v ./cmd/mudly

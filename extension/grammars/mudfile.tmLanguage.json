@@ -300,17 +300,19 @@
 			]
 		},
 		"devenv-artefact-link": {
-			"match": "^\\s{2}(DEVENV)\\s(.+)$",
+			"match": "^\\s{2}(DEVENV) (\\S+)(?:\\s(\\S+))?$",
 			"captures": {
 				"1": { "name": "keyword.control" },
-				"2": { "name": "entity.name.type.class" }
+				"2": { "name": "entity.name.type.class" },
+				"3": { "name": "variable.parameter" }
 			}
 		},
 		"devenv-step-link": {
-			"match": "^\\s{4}(DEVENV)\\s(.+)$",
+			"match": "^\\s{4}(DEVENV) (\\S+)(?:\\s(\\S+))?$",
 			"captures": {
 				"1": { "name": "keyword.control" },
-				"2": { "name": "entity.name.type.class" }
+				"2": { "name": "entity.name.type.class" },
+				"3": { "name": "variable.parameter" }
 			}
 		}
 	}

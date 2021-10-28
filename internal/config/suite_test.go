@@ -518,6 +518,11 @@ func TestLoadConfig(t *testing.T) {
 						  STEP run-2
 						    DEVENV db-env
 						    COMMAND echo "yo"
+						
+						ARTEFACT remote-env
+						  DEVENV ./other db
+						  STEP run-3
+						    COMMAND echo "yello"
 		            `),
 				},
 			},
@@ -552,6 +557,16 @@ func TestLoadConfig(t *testing.T) {
 									DevEnv:  "db-env",
 								},
 							},
+						},
+						{
+							Name: "remote-env",
+							Steps: []config.Step{
+								{
+									Name:    "run-3",
+									Command: "echo \"yello\"",
+								},
+							},
+							DevEnv: "./other db",
 						},
 					},
 				},
