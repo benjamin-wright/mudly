@@ -53,6 +53,35 @@ func getArtefact(target target.Target, configs []config.Config) (*config.Config,
 	return &cfg, &artefact, nil
 }
 
+func getDevEnv(configs []config.Config, cfg *config.Config, devenv string) (*config.Config, *config.DevEnv, error) {
+	parts := strings.Split(devenv, " ")
+	if len(parts) > 2 {
+		return nil, nil, fmt.Errorf("devenv should have 1 or 2 components, found %d (%s)", len(parts), devenv)
+	}
+
+	if len(parts) == 1 {
+		for _, d := range cfg.DevEnv {
+			if d.Name == devenv {
+				return cfg, &d, nil
+			}
+		}
+
+		return nil, nil, fmt.Errorf("failed to find local devenv config for %s", devenv)
+	}
+
+	for _, c := range configs {
+		if c.Path == parts[0] {
+			for _, d := range c.DevEnv {
+				if d.Name == parts[1] {
+					return &c, &d, nil
+				}
+			}
+		}
+	}
+
+	return nil, nil, fmt.Errorf("failed to find remote devenv config for %s", devenv)
+}
+
 func getPipeline(configs []config.Config, cfg *config.Config, artefact *config.Artefact) (*config.Config, *config.Pipeline, error) {
 	if artefact.Steps != nil && len(artefact.Steps) > 0 {
 		return cfg, &config.Pipeline{
@@ -313,25 +342,18 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 		}
 
 		if artefact.DevEnv != "" {
-			var d *config.DevEnv
-			for index, devenv := range pipelineConfig.DevEnv {
-				if devenv.Name == artefact.DevEnv {
-					d = &pipelineConfig.DevEnv[index]
-					break
-				}
-			}
-
-			if d == nil {
+			devenvConfig, devenv, err := getDevEnv(configs, cfg, artefact.DevEnv)
+			if err != nil {
 				return &nodes, fmt.Errorf("failed to get devenv for reference: %s", artefact.DevEnv)
 			}
 
 			newNode := runner.Node{
 				SharedEnv: utils.MergeMaps(cfg.Env, pipeline.Env, artefact.Env),
-				Path:      cfg.WorkDir(),
+				Path:      devenvConfig.WorkDir(),
 				Artefact:  artefact.Name,
 				Step: steps.DevenvStep{
-					Name:    d.Name,
-					Compose: d.Compose,
+					Name:    devenv.Name,
+					Compose: devenv.Compose,
 				},
 				State:     runner.STATE_PENDING,
 				DependsOn: []*runner.Node{},
@@ -342,25 +364,18 @@ func createNodes(targets []target.Target, configs []config.Config) (*NodeList, e
 
 		for _, step := range pipeline.Steps {
 			if step.DevEnv != "" {
-				var d *config.DevEnv
-				for index, devenv := range pipelineConfig.DevEnv {
-					if devenv.Name == step.DevEnv {
-						d = &pipelineConfig.DevEnv[index]
-						break
-					}
-				}
-
-				if d == nil {
+				devenvConfig, devenv, err := getDevEnv(configs, cfg, step.DevEnv)
+				if err != nil {
 					return &nodes, fmt.Errorf("failed to get devenv for reference: %s", step.DevEnv)
 				}
 
 				newNode := runner.Node{
 					SharedEnv: utils.MergeMaps(cfg.Env, pipeline.Env, artefact.Env),
-					Path:      cfg.WorkDir(),
+					Path:      devenvConfig.WorkDir(),
 					Artefact:  artefact.Name,
 					Step: steps.DevenvStep{
-						Name:    d.Name,
-						Compose: d.Compose,
+						Name:    devenv.Name,
+						Compose: devenv.Compose,
 					},
 					State:     runner.STATE_PENDING,
 					DependsOn: []*runner.Node{},

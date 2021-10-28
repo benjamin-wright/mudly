@@ -16,6 +16,7 @@ type Dockerfile struct {
 type DevEnv struct {
 	Name    string
 	Compose string
+	Config  string
 }
 
 type Config struct {

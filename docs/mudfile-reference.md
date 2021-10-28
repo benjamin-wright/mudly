@@ -189,6 +189,15 @@ ARTEFACT <name>
     COMMAND <content>
 ```
 
+or to reference a devenv in another mudfile
+
+```
+ARTEFACT <name>
+  DEVENV ./path/to/mudfile test-env
+  STEP <name>
+    COMMAND <content>
+```
+
 The services in the named `DEVENV` definition will be spun up as part of the first build containing an artefact or step that references the `DEVENV`. When named by an [ARTEFACT](#ARTEFACT), this happens before the first step is run. When named by a [STEP](#STEP), this happens immediately before that step.
 
 > NB: At the end of the build the development environment is left running, so that it can be re-used between builds. Run `mudly stop` (not implemented yet) to tear down any existing development environments.

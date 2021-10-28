@@ -731,9 +731,22 @@ func TestSolver(t *testing.T) {
 			},
 		},
 		{
-			Name:    "devenv",
-			Targets: []target.Target{{Dir: ".", Artefact: "image"}},
+			Name: "devenv",
+			Targets: []target.Target{
+				{Dir: ".", Artefact: "image"},
+				{Dir: ".", Artefact: "other"},
+			},
 			Configs: []config.Config{
+				{
+					Path:  "other/named",
+					IsDir: false,
+					DevEnv: []config.DevEnv{
+						{
+							Name:    "db",
+							Compose: "new compose file",
+						},
+					},
+				},
 				{
 					Path:  ".",
 					IsDir: true,
@@ -755,6 +768,16 @@ func TestSolver(t *testing.T) {
 								{
 									Name:    "docker",
 									Command: "thing 2",
+								},
+							},
+						},
+						{
+							Name:   "other",
+							DevEnv: "other/named db",
+							Steps: []config.Step{
+								{
+									Name:    "test",
+									Command: "thing 3",
 								},
 							},
 						},
@@ -791,6 +814,26 @@ func TestSolver(t *testing.T) {
 					},
 					State:     runner.STATE_PENDING,
 					DependsOn: []int{1},
+				},
+				{
+					Path:     "other",
+					Artefact: "other",
+					Step: steps.DevenvStep{
+						Name:    "db",
+						Compose: "new compose file",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{},
+				},
+				{
+					Path:     ".",
+					Artefact: "other",
+					Step: steps.CommandStep{
+						Name:    "test",
+						Command: "thing 3",
+					},
+					State:     runner.STATE_PENDING,
+					DependsOn: []int{3},
 				},
 			},
 		},

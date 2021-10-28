@@ -138,6 +138,71 @@ func TestGetArtefact(t *testing.T) {
 		})
 	}
 }
+
+func TestGetDevenv(t *testing.T) {
+	for _, test := range []struct {
+		Name     string
+		Configs  []config.Config
+		Config   *config.Config
+		DevEnv   string
+		Expected *config.DevEnv
+		Error    string
+	}{
+		{
+			Name: "get local devenv",
+			Config: &config.Config{
+				DevEnv: []config.DevEnv{
+					{
+						Name:    "db",
+						Compose: "file",
+					},
+				},
+			},
+			DevEnv:   "db",
+			Expected: &config.DevEnv{Name: "db", Compose: "file"},
+		},
+		{
+			Name: "get remote devenv",
+			Configs: []config.Config{
+				{
+					Path: "nope",
+				},
+				{
+					Path:  "other/named",
+					IsDir: false,
+					DevEnv: []config.DevEnv{
+						{
+							Name:    "db",
+							Compose: "file",
+						},
+					},
+				},
+			},
+			Config:   &config.Config{},
+			DevEnv:   "other/named db",
+			Expected: &config.DevEnv{Name: "db", Compose: "file"},
+		},
+	} {
+		t.Run(test.Name, func(u *testing.T) {
+			_, devenv, err := getDevEnv(test.Configs, test.Config, test.DevEnv)
+
+			if test.Error != "" {
+				assert.EqualError(u, err, test.Error)
+			} else {
+				assert.NoError(u, err, "didn't expect an error")
+			}
+
+			if test.Expected != nil {
+				if devenv != nil {
+					assert.Equal(u, test.Expected, devenv)
+				} else {
+					assert.Fail(u, "expected a devenv", "%+v", devenv)
+				}
+			}
+		})
+	}
+}
+
 func TestGetPipeline(t *testing.T) {
 	for _, test := range []struct {
 		Name     string
