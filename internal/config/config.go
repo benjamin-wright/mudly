@@ -70,6 +70,7 @@ type Artefact struct {
 type Step struct {
 	Name       string
 	Env        map[string]string
+	Arg        map[string]string
 	Condition  string
 	Command    string
 	Context    string

@@ -78,6 +78,15 @@
 				"2": { "name": "variable.parameter" }
 			}
 		},
+		"arg": {
+			"match": "^(?: \\s+)?(ARG) (\\S*)(\\=)(\\S*)$",
+			"captures": {
+				"1": { "name": "keyword.control" },
+				"2": { "name": "variable.other.readwrite" },
+				"3": { "name": "keyword.operator" },
+				"4": { "name": "variable.parameter" }
+			}
+		},
 		"pipeline": {
 			"begin": "^(PIPELINE) (\\S*)$",
 			"beginCaptures": {
@@ -122,6 +131,7 @@
 				{ "include": "#env" },
 				{ "include": "#watch" },
 				{ "include": "#tag" },
+				{ "include": "#arg" },
 				{ "include": "#wait-for" },
 				{ "include": "#devenv-step-link" }
 			]

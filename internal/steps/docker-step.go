@@ -1,12 +1,14 @@
 package steps
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 
 	"github.com/sirupsen/logrus"
 	"ponglehub.co.uk/tools/mudly/internal/runner"
+	"ponglehub.co.uk/tools/mudly/internal/utils"
 )
 
 type DockerStep struct {
@@ -15,9 +17,10 @@ type DockerStep struct {
 	Dockerignore string
 	Context      string
 	Tag          string
+	BuildArg     map[string]string
 }
 
-func (d DockerStep) args() []string {
+func (d DockerStep) args(env map[string]string) []string {
 	args := []string{"build"}
 
 	if d.Tag != "" {
@@ -25,6 +28,12 @@ func (d DockerStep) args() []string {
 	}
 
 	args = append(args, "-f", "-")
+
+	merged := utils.MergeMaps(env, d.BuildArg)
+
+	for key, value := range merged {
+		args = append(args, "--build-arg", fmt.Sprintf("%s=%s", key, value))
+	}
 
 	if d.Context != "" {
 		args = append(args, d.Context)
@@ -54,7 +63,7 @@ func (d DockerStep) Run(dir string, artefact string, env map[string]string) runn
 		artefact: artefact,
 		step:     d.Name,
 		command:  "docker",
-		args:     d.args(),
+		args:     d.args(env),
 		stdin:    d.Dockerfile,
 	})
 

@@ -33,6 +33,7 @@ DOCKERFILE go-image
   FILE
     FROM go:1.3.2
     RUN go dep download
+    ARG SOMETHING=default
   IGNORE
     node_modules
     .git
@@ -43,6 +44,7 @@ ARTEFACT image
   STEP image
     DOCKERFILE go-image
     TAG my-image
+    ARG SOMETHING=value
     CONTEXT .
 
 ARTEFACT watch

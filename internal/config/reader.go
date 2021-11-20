@@ -64,6 +64,7 @@ const (
 	ARTEFACT_LINE lineType = iota
 	PIPELINE_LINE
 	ENV_LINE
+	ARG_LINE
 	DEVENV_LINE
 	COMPOSE_LINE
 	DEPENDS_LINE
@@ -90,6 +91,10 @@ func (r *reader) getLineType() lineType {
 
 	if strings.HasPrefix(trimmed, "ENV") {
 		return ENV_LINE
+	}
+
+	if strings.HasPrefix(trimmed, "ARG") {
+		return ARG_LINE
 	}
 
 	if strings.HasPrefix(trimmed, "ARTEFACT") {

@@ -307,6 +307,7 @@ func createRunnable(step config.Step) (runner.Runnable, error) {
 			Dockerignore: step.Ignore,
 			Context:      step.Context,
 			Tag:          step.Tag,
+			BuildArg:     step.Arg,
 		}, nil
 	}
 

@@ -392,7 +392,7 @@ func getConfigLinked(r *reader) (string, error) {
 	return strings.Join(parts[1:], " "), nil
 }
 
-var envRegex *regexp.Regexp = regexp.MustCompile(`^(?:\s*)ENV (\S+)\=(\S+)$`)
+var envRegex *regexp.Regexp = regexp.MustCompile(`^(?:\s*)(?:(?:ENV)|(?:ARG)) (\S+)\=(\S+)$`)
 
 func getEnv(r *reader) (string, string, error) {
 	matches := envRegex.FindStringSubmatch(r.line())
@@ -464,6 +464,17 @@ func getStep(r *reader) (Step, error) {
 			}
 
 			step.Env[name] = value
+		case ARG_LINE:
+			name, value, err := getEnv(r)
+			if err != nil {
+				return step, err
+			}
+
+			if step.Arg == nil {
+				step.Arg = map[string]string{}
+			}
+
+			step.Arg[name] = value
 		case WATCH_LINE:
 			paths, err := getWatchPaths(r)
 			if err != nil {
