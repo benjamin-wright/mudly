@@ -117,6 +117,7 @@
 			"patterns": [
 				{ "include": "#command" },
 				{ "include": "#condition" },
+				{ "include": "#context" },
 				{ "include": "#docker-link" },
 				{ "include": "#env" },
 				{ "include": "#watch" },
@@ -236,6 +237,13 @@
 					}
 				}
 			]
+		},
+		"context": {
+			"match": "^\\s{4}(CONTEXT)\\s(.+)$",
+			"captures": {
+				"1": { "name": "keyword.control" },
+				"2": { "name": "entity.name.type.class" }
+			}
 		},
 		"docker-link": {
 			"match": "^\\s{4}(DOCKERFILE)\\s(.+)$",

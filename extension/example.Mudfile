@@ -43,6 +43,7 @@ ARTEFACT image
   STEP image
     DOCKERFILE go-image
     TAG my-image
+    CONTEXT .
 
 ARTEFACT watch
   PIPELINE test-pipeline
